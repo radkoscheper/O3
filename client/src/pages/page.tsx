@@ -7,13 +7,14 @@ import { Card } from "@/components/ui/card";
 import { Search, Settings, ArrowLeft, MapPin, Calendar } from "lucide-react";
 import { Link } from "wouter";
 import TravelSlider from "@/components/ui/travel-slider";
+import UniversalHero from "@/components/ui/universal-hero";
+import UniversalCarousel from "@/components/ui/universal-carousel";
+import UniversalFooter from "@/components/ui/universal-footer";
 import StructuredData from "@/components/ui/structured-data";
 import OpenGraphMeta from "@/components/ui/open-graph-meta";
-import AIToggleHero from "@/components/ui/ai-toggle-hero";
-import AIToggleImage from "@/components/ui/ai-toggle-image";
 import type { SiteSettings, SearchConfig } from "@shared/schema";
 
-// Activities section component
+// Activities section component using UniversalCarousel
 function ActivitiesSection({ pageTitle, setSelectedActivityId }: { pageTitle?: string, setSelectedActivityId: (id: string | null) => void }) {
   const { data: locationActivities, isLoading } = useQuery({
     queryKey: ['/api/activities/location', pageTitle],
@@ -33,82 +34,60 @@ function ActivitiesSection({ pageTitle, setSelectedActivityId }: { pageTitle?: s
   }
 
   return (
-    <section className="py-4 px-5 max-w-7xl mx-auto">
-      <div className="text-center mb-6">
-        <h2 className="text-4xl md:text-6xl font-playfair font-bold mb-4 text-navy-dark tracking-wide">
-          Activiteiten in {pageTitle}
-        </h2>
-        <p className="text-xl md:text-2xl text-navy-medium font-croatia-body max-w-3xl mx-auto leading-relaxed">
-          De beste ervaringen die {pageTitle} te bieden heeft
-        </p>
-      </div>
-      <TravelSlider
+    <div className="bg-white">
+      <UniversalCarousel
+        title={`Activiteiten in ${pageTitle}`}
+        subtitle="Ontdek de beste ervaringen in deze bestemming"
+        items={locationActivities}
         visibleItems={{ mobile: 1, tablet: 2, desktop: 4 }}
         showNavigation={true}
-        className="mx-auto"
-      >
-        {locationActivities.map((activity: any) => {
-          // Handler for activity click to show details in content section
-          const handleActivityClick = (e: React.MouseEvent) => {
-            e.preventDefault();
-            setSelectedActivityId(activity.id.toString());
-            
-            // Update URL with activity parameter
-            const newUrl = `${window.location.pathname}?activity=${activity.id}`;
-            window.history.pushState({}, '', newUrl);
-            
-            // Scroll to content section smoothly
-            const contentSection = document.getElementById('content-section');
-            if (contentSection) {
-              contentSection.scrollIntoView({ behavior: 'smooth' });
-            }
-          };
-
-          return (
-            <Card 
-              key={activity.id}
-              className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl transition-all duration-500 border-0 rounded-2xl mx-2 h-full flex flex-col cursor-pointer"
-              onClick={handleActivityClick}
-            >
-              {activity.image && (
-                <div className="h-64 overflow-hidden relative">
-                  <AIToggleImage
-                    src={activity.image}
-                    alt={activity.alt || activity.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                    imageType="activity"
-
-                    lazy={true}
-                    fallback="/images/activities/placeholder.svg"
-                    onAIProcessed={(tags: any) => {
-                      console.log(`🏷️ AI tags voor ${activity.name}:`, tags);
-                    }}
-                  />
-                </div>
-              )}
-              <div className="p-8 flex flex-col flex-grow">
+        renderCard={(activity) => (
+          <Card className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl transition-all duration-500 border-0 rounded-2xl mx-4 h-full flex flex-col relative hover:z-10">
+            {activity.image && (
+              <div className="aspect-[4/3] overflow-hidden">
+                <img
+                  src={activity.image}
+                  alt={activity.alt || activity.name}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                  onError={(e) => {
+                    e.currentTarget.src = '/images/activities/placeholder.svg';
+                  }}
+                />
+              </div>
+            )}
+            <div className="p-8 flex-1 flex flex-col justify-between">
+              <div>
                 <h3 className="font-playfair font-bold text-2xl text-navy-dark mb-3 leading-tight">
                   {activity.name}
                 </h3>
-                {activity.description && (
-                  <p className="font-croatia-body text-navy-medium mb-6 leading-relaxed text-base flex-grow">
-                    {activity.description}
-                  </p>
-                )}
+                <p className="font-croatia-body text-navy-medium mb-4 leading-relaxed text-base">
+                  {activity.description || "Ontdek deze unieke activiteit"}
+                </p>
+              </div>
+              <div className="flex items-center justify-between mt-auto">
                 {activity.category && (
-                  <p className="text-xs text-gray-500 mt-2 capitalize">
+                  <p className="font-croatia-body text-sm text-gold-accent font-bold capitalize">
                     {activity.category}
                   </p>
                 )}
-                <div className="inline-flex items-center justify-center bg-gold-accent hover:bg-gold-light text-navy-dark font-playfair font-bold px-8 py-4 rounded-full transition-all duration-300 hover:scale-105 shadow-luxury hover:shadow-gold text-lg mt-4">
+                <div className="inline-flex items-center justify-center bg-gold-accent hover:bg-gold-light text-navy-dark font-playfair font-bold px-6 py-3 rounded-full transition-all duration-300 hover:scale-105 shadow-luxury hover:shadow-gold text-sm cursor-pointer">
                   Bekijk Details
                 </div>
               </div>
-            </Card>
-          );
-        })}
-      </TravelSlider>
-    </section>
+            </div>
+          </Card>
+        )}
+        onItemClick={(activity) => {
+          setSelectedActivityId(activity.id.toString());
+          const newUrl = `${window.location.pathname}?activity=${activity.id}`;
+          window.history.pushState({}, '', newUrl);
+          const contentSection = document.getElementById('content-section');
+          if (contentSection) {
+            contentSection.scrollIntoView({ behavior: 'smooth' });
+          }
+        }}
+      />
+    </div>
   );
 }
 
@@ -442,83 +421,37 @@ export default function Page() {
         modifiedTime={page.updatedAt}
       />
       
-      {/* Hero Section - AI Toggle */}
-      <AIToggleHero
+      {/* Universal Hero Section */}
+      <UniversalHero
         backgroundImage={getBackgroundImage()}
-        className="min-h-screen flex items-center justify-center text-white py-24 px-5 text-center"
-        aiPreset="landscape"
-        upscale={true}
-        aspectRatio="16:9"
-        showAIBadge={true}
-        location={page?.title || "Polen"}
-      >
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-5xl md:text-7xl font-playfair font-bold mb-6 text-white drop-shadow-2xl tracking-wide leading-tight">
-            {page?.title || "Ontdek Polen"}
-          </h1>
-          <p className="text-xl md:text-3xl mb-12 text-white/95 font-croatia-body drop-shadow-lg leading-relaxed font-light">
-            Mooie plekken in {page?.title} ontdekken
-          </p>
-        
-        <form 
-          onSubmit={(e) => {
-            console.log('Destination page form submit event triggered');
-            handleSearch(e);
-          }} 
-          className="mt-5 mb-5 relative"
-        >
-          <div className="relative inline-block">
-            <Input
-              type="text"
-              placeholder={searchConfig?.placeholderText || "Zoek activiteiten in deze bestemming..."}
-              value={searchQuery}
-              onChange={(e) => {
-                console.log('Destination page search input changed:', e.target.value);
-                setSearchQuery(e.target.value);
-              }}
-              onKeyDown={(e) => {
-                console.log('Destination page key pressed:', e.key);
-                if (e.key === 'Enter') {
-                  console.log('Enter key detected, form should submit');
-                }
-              }}
-              className="py-5 px-8 w-[28rem] max-w-full border-2 border-white/30 rounded-full text-lg text-navy-dark font-croatia-body shadow-2xl backdrop-blur-md bg-white/95 hover:bg-white hover:border-gold-accent transition-all duration-500 focus:border-gold-accent focus:ring-2 focus:ring-gold-accent/50"
-            />
-            <Search 
-              className="absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-500 h-5 w-5 cursor-pointer" 
-              onClick={() => {
-                console.log('Destination page search icon clicked');
-                if (searchQuery.trim()) {
-                  const form = document.querySelector('form');
-                  if (form) {
-                    form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-                  }
-                }
-              }}
-            />
-          </div>
-        </form>
-        
-        <div className="flex flex-col sm:flex-row gap-6 justify-center mt-12">
-          <Button
-            asChild
-            className="py-5 px-10 text-lg font-playfair font-medium bg-navy-dark hover:bg-navy-medium text-white rounded-full shadow-2xl hover:shadow-navy-dark/25 transition-all duration-500 border-2 border-navy-dark hover:border-navy-medium hover:scale-105"
-          >
-            <Link href="/">
-              <ArrowLeft className="w-5 h-5 mr-3" />
-              Terug naar Home
-            </Link>
-          </Button>
-          <Button
-            className="py-5 px-10 text-lg font-playfair font-medium bg-white/10 backdrop-blur-md hover:bg-white/20 border-2 border-white/40 text-white rounded-full shadow-2xl hover:shadow-white/25 transition-all duration-500 hover:scale-105"
-            variant="outline"
-          >
-            <Calendar className="w-5 h-5 mr-3" />
-            Plan je bezoek
-          </Button>
-        </div>
-        </div>
-      </AIToggleHero>
+        title={page?.title || "Ontdek Polen"}
+        subtitle={`Mooie plekken in ${page?.title} ontdekken`}
+        showSearchBar={true}
+        searchPlaceholder={searchConfig?.placeholderText || "Zoek activiteiten in deze bestemming..."}
+        searchQuery={searchQuery}
+        onSearchChange={(value) => {
+          console.log('Destination page search input changed:', value);
+          setSearchQuery(value);
+        }}
+        onSearchSubmit={(e) => {
+          console.log('Destination page form submit event triggered');
+          handleSearch(e);
+        }}
+        buttons={[
+          {
+            text: "Terug naar Home",
+            onClick: () => window.location.href = "/",
+            variant: 'primary' as const,
+            icon: <ArrowLeft className="w-5 h-5" />
+          },
+          {
+            text: "Bekijk Locaties", 
+            onClick: () => {},
+            variant: 'secondary' as const,
+            icon: <MapPin className="w-5 h-5" />
+          }
+        ]}
+      />
 
       {/* Search Results Overlay */}
       {showSearchResults && (
@@ -580,18 +513,11 @@ export default function Page() {
                         >
                           <div className="flex items-center space-x-4">
                             {result.image && (
-                              <div className="relative">
-                                <AIToggleImage
-                                  src={result.image}
-                                  alt={result.alt || result.name}
-                                  className="w-16 h-16 object-cover rounded-lg"
-                                  imageType="activity"
-                                  lazy={true}
-                                />
-                                <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-1 rounded-full text-center" style={{fontSize: '8px', lineHeight: '12px', minWidth: '12px', height: '12px'}}>
-                                  AI
-                                </div>
-                              </div>
+                              <img 
+                                src={result.image} 
+                                alt={result.alt || result.name} 
+                                className="w-16 h-16 object-cover rounded-lg"
+                              />
                             )}
                             <div className="flex-1">
                               <h4 className="font-semibold text-gray-900 mb-1">{result.name || result.title}</h4>
@@ -607,18 +533,11 @@ export default function Page() {
                           <div className="p-4 hover:bg-gray-50 rounded-lg cursor-pointer border border-gray-200 transition-all duration-200">
                             <div className="flex items-center space-x-4">
                               {result.image && (
-                                <div className="relative">
-                                  <AIToggleImage
-                                    src={result.image}
-                                    alt={result.alt || result.name}
-                                    className="w-16 h-16 object-cover rounded-lg"
-                                    imageType="activity"
-                                    lazy={true}
-                                  />
-                                  <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-1 rounded-full text-center" style={{fontSize: '8px', lineHeight: '12px', minWidth: '12px', height: '12px'}}>
-                                    AI
-                                  </div>
-                                </div>
+                                <img 
+                                  src={result.image} 
+                                  alt={result.alt || result.name} 
+                                  className="w-16 h-16 object-cover rounded-lg"
+                                />
                               )}
                               <div className="flex-1">
                                 <h4 className="font-semibold text-gray-900 mb-1">{result.name || result.title}</h4>
@@ -674,24 +593,14 @@ export default function Page() {
               </div>
               
               {selectedActivity.image && (
-                <div className="relative mb-6">
-                  <AIToggleImage
-                    src={selectedActivity.image}
-                    alt={selectedActivity.alt || selectedActivity.name}
-                    className="w-full h-64 object-cover rounded-lg"
-                    imageType="activity"
-                    aspectRatio="16:9"
-                    priority={true}
-                    fallback="/images/activities/placeholder.svg"
-                    onAIProcessed={(tags: any) => {
-                      console.log(`🏷️ AI tags voor activity detail ${selectedActivity.name}:`, tags);
-                    }}
-                  />
-                  <div className="absolute top-4 right-4 bg-black/70 text-white text-sm px-3 py-1 rounded-md flex items-center gap-2">
-                    <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                    AI Enhanced
-                  </div>
-                </div>
+                <img
+                  src={selectedActivity.image}
+                  alt={selectedActivity.alt || selectedActivity.name}
+                  className="w-full h-64 object-cover rounded-lg mb-6"
+                  onError={(e) => {
+                    e.currentTarget.src = '/images/activities/placeholder.svg';
+                  }}
+                />
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -769,33 +678,23 @@ export default function Page() {
       {/* Location-specific Featured Activities Section */}
       {locationFeaturedActivities.length > 0 && (
         <section className="py-16 px-5 max-w-6xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-4xl md:text-6xl font-playfair font-bold mb-4 text-navy-dark tracking-wide">
-              Hoogtepunten van {page.title}
-            </h2>
-            <p className="text-xl md:text-2xl text-navy-medium font-croatia-body max-w-3xl mx-auto leading-relaxed">
-              De beste activiteiten in de regio
-            </p>
-          </div>
+          <h2 className="text-3xl font-bold mb-8 font-playfair text-gray-900">
+            Hoogtepunten van {page.title}
+          </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {locationFeaturedActivities
               .sort((a: any, b: any) => (a.ranking || 0) - (b.ranking || 0))
               .map((activity: any) => {
                 const CardContent = (
                   <div className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl transition-shadow duration-300 border-none cursor-pointer text-center">
-                    <div className="relative">
-                      <AIToggleImage
-                        src={activity.image || '/images/activities/placeholder.svg'}
-                        alt={activity.alt || activity.name}
-                        className="w-16 h-16 mx-auto mb-3 object-cover rounded-lg"
-                        imageType="activity"
-                        lazy={true}
-                        fallback="/images/activities/placeholder.svg"
-                      />
-                      <div className="absolute -top-1 -right-1 bg-green-500 text-white rounded-full" style={{fontSize: '8px', lineHeight: '10px', width: '10px', height: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                        ✨
-                      </div>
-                    </div>
+                    <img
+                      src={activity.image || '/images/activities/placeholder.svg'}
+                      alt={activity.alt || activity.name}
+                      className="w-16 h-16 mx-auto mb-3 object-cover rounded-lg"
+                      onError={(e) => {
+                        e.currentTarget.src = '/images/activities/placeholder.svg';
+                      }}
+                    />
                     <h3 className="font-bold font-playfair text-gray-900 text-sm">
                       {activity.name}
                     </h3>
@@ -846,27 +745,11 @@ export default function Page() {
         </section>
       )}
 
-      {/* Footer - exact same as homepage */}
-      <footer 
-        className="text-center py-10 px-5 text-white relative"
-        style={{ backgroundColor: "#2f3e46" }}
-      >
-        {/* Admin Link */}
-        <Link href="/admin">
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="absolute top-4 right-4 text-white border-white hover:bg-white hover:text-gray-900"
-          >
-            <Settings className="h-4 w-4 mr-2" />
-            Admin
-          </Button>
-        </Link>
-        
-        <p className="font-croatia-body">
-          &copy; 2025 {(siteSettings as any)?.siteName || "Ontdek Polen"}. Alle rechten voorbehouden.
-        </p>
-      </footer>
+      {/* Universal Footer */}
+      <UniversalFooter 
+        siteName={(siteSettings as any)?.siteName || "Ontdek Polen"} 
+        siteDescription={(siteSettings as any)?.siteDescription || "Jouw gids voor het ontdekken van de mooiste plekken in Polen."} 
+      />
     </div>
   );
 }
