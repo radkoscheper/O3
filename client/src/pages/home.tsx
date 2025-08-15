@@ -7,6 +7,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import TravelSlider from "@/components/ui/travel-slider";
 import { DestinationImage, ThumbnailImage, HeroImage } from "@/components/ui/optimized-image";
+import { HeroImageOptimized, DestinationImageOptimized } from "@/components/ui/optimized-image-enhanced";
+import AIEnhancedImage from "@/components/ui/ai-enhanced-image";
+import StructuredData from "@/components/ui/structured-data";
+import OpenGraphMeta from "@/components/ui/open-graph-meta";
+import { useSEO } from "@/hooks/use-seo";
+import { usePerformanceMonitoring, useConnectionMonitoring } from "@/hooks/use-performance";
+import { usePerformanceOptimizations } from "@/hooks/use-performance-optimization";
+import { trackSearch, trackHomepageInteraction, trackDestinationView, trackGuideView } from "../../lib/analytics";
 import type { SiteSettings, SearchConfig, SelectMotivation, Activity } from "@shared/schema";
 
 export default function Home() {
@@ -15,6 +23,12 @@ export default function Home() {
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  
+  // Hooks must be called in consistent order
+  useSEO();
+  usePerformanceMonitoring();
+  useConnectionMonitoring();
+  usePerformanceOptimizations();
   
   // Close search handler that preserves ability to re-search
   const closeSearch = () => {
@@ -232,6 +246,9 @@ export default function Home() {
     e.preventDefault();
     if (!searchQuery.trim()) return;
     
+    // Track search analytics
+    trackSearch(searchQuery, 'homepage');
+    
     console.log('=== SEARCH DEBUG ===');
     console.log('Starting search for:', searchQuery);
     console.log('Current showSearchResults:', showSearchResults);
@@ -278,21 +295,42 @@ export default function Home() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#f8f6f1" }}>
-      {/* Hero Section - WebsiteBuilder Design */}
+      {/* Structured Data for Homepage */}
+      <StructuredData
+        type="Website"
+        title={siteSettings?.siteName || "Ontdek Polen"}
+        description={siteSettings?.siteDescription || "Jouw gids voor het ontdekken van de mooiste plekken in Polen. Bezoek historische steden, nationale parken en verborgen parels van Midden-Europa."}
+        url={typeof window !== 'undefined' ? window.location.href : ''}
+        image={siteSettings?.socialMediaImage || (typeof window !== 'undefined' ? `${window.location.origin}/images/og-poland-travel.jpg` : '')}
+        keywords={siteSettings?.metaKeywords || "Polen, reizen, bestemmingen, Krakow, Warschau, Gdansk, reistips"}
+        siteName={siteSettings?.siteName || "Ontdek Polen"}
+      />
+      
+      {/* Open Graph Meta Tags for Social Media */}
+      <OpenGraphMeta
+        title={siteSettings?.siteName || "Ontdek Polen"}
+        description={siteSettings?.siteDescription || "Jouw gids voor het ontdekken van de mooiste plekken in Polen. Bezoek historische steden, nationale parken en verborgen parels van Midden-Europa."}
+        image={siteSettings?.socialMediaImage || (typeof window !== 'undefined' ? `${window.location.origin}/images/og-poland-travel.jpg` : '')}
+        url={typeof window !== 'undefined' ? window.location.href : ''}
+        type="website"
+        siteName={siteSettings?.siteName || "Ontdek Polen"}
+      />
+      {/* Hero Section - Restored Original Layout */}
       <section 
-        className="relative bg-cover bg-center text-white py-24 px-5 text-center min-h-screen flex items-center justify-center"
+        className="relative text-white py-24 px-5 text-center min-h-screen flex items-center justify-center overflow-hidden"
         style={{
           backgroundImage: siteSettings?.backgroundImage 
             ? `url('${siteSettings.backgroundImage}')` 
-            : "url('/images/header.jpg')",
+            : "url('/images/backgrounds/header.jpg')",
           backgroundSize: "cover",
-          backgroundPosition: "center"
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat"
         }}
       >
         {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-navy-dark/40 via-navy-dark/20 to-navy-dark/60"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-navy-dark/40 via-navy-dark/20 to-navy-dark/60 z-10"></div>
         
-        <div className="relative z-10 max-w-4xl mx-auto text-center">
+        <div className="relative z-20 max-w-4xl mx-auto text-center">
           <h1 className="text-5xl md:text-7xl font-playfair font-bold mb-6 text-white drop-shadow-2xl tracking-wide leading-tight">
             {siteSettings?.siteName || "Ontdek Polen"}
           </h1>
@@ -446,12 +484,57 @@ export default function Home() {
                 <Card 
                   className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl transition-all duration-500 border-0 rounded-2xl mx-2"
                 >
-                  <div className="aspect-[4/3] overflow-hidden">
-                    <DestinationImage
-                      src={destination.image || '/images/placeholder.jpg'}
-                      alt={destination.alt || destination.name || 'Bestemming'}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                    />
+                  <div className="aspect-[4/3] overflow-hidden relative">
+
+                    {/* FASE 4: Gebruik pre-processed AI images als beschikbaar, anders runtime AI */}
+                    {destination.aiImage ? (
+                      // Pre-processed AI URL - instant loading (0ms)
+                      <DestinationImage
+                        src={destination.aiImage}
+                        alt={destination.alt || destination.name || 'Bestemming'}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                      />
+                    ) : destination.image && destination.image.includes('cloudinary.com') ? (
+                      // Runtime AI processing - fallback for non-processed images
+                      <AIEnhancedImage
+                        src={destination.image}
+                        alt={destination.alt || destination.name || 'Bestemming'}
+                        aiPreset="auto"
+                        upscale={true}
+                        aspectRatio="4:3"
+                        autoTag={true}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                        onAIProcessed={(tags, categories) => {
+                          console.log(`🏷️ AI tags voor ${destination.name}:`, tags);
+                        }}
+                      />
+                    ) : (
+                      // Regular image for non-Cloudinary sources
+                      <DestinationImage
+                        src={destination.image || '/images/placeholder.jpg'}
+                        alt={destination.alt || destination.name || 'Bestemming'}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                      />
+                    )}
+                    
+                    {/* AI Enhancement Indicator */}
+                    {destination.aiImage ? (
+                      // Pre-processed AI indicator (best performance)
+                      <div className="absolute top-2 right-2">
+                        <div className="bg-blue-500 bg-opacity-95 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-md">
+                          <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
+                          AI Pro
+                        </div>
+                      </div>
+                    ) : destination.image && destination.image.includes('cloudinary.com') && (
+                      // Runtime AI indicator (fallback)
+                      <div className="absolute top-2 right-2">
+                        <div className="bg-green-500 bg-opacity-90 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-md">
+                          <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                          AI
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="p-8">
                     <h3 className="font-playfair font-bold text-2xl text-navy-dark mb-3 leading-tight">

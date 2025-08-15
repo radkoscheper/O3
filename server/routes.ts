@@ -7,11 +7,13 @@ import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import bcrypt from "bcrypt";
 import { z } from "zod";
-import { insertUserSchema, updateUserSchema, changePasswordSchema, resetPasswordSchema } from "@shared/schema";
+import { insertUserSchema, updateUserSchema, changePasswordSchema, resetPasswordSchema, pages, guides, siteSettings } from "@shared/schema";
+import { eq } from "drizzle-orm";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { cloudinaryService } from "./cloudinary";
+import { processImageWithAI, batchProcessImages, type AIProcessingSettings } from "./ai-image-processor";
 
 declare module "express-session" {
   interface SessionData {
@@ -1381,6 +1383,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // SEO API ENDPOINT  
+  app.get("/api/seo-data", async (req, res) => {
+    try {
+      const { path } = req.query;
+      
+      if (!path || typeof path !== 'string') {
+        return res.status(400).json({ error: 'Path parameter is required' });
+      }
+
+      const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+      
+      // Get site settings
+      const [settings] = await db.select().from(siteSettings).limit(1);
+      
+      let seoData: any = {
+        siteName: settings?.siteName || 'Ontdek Polen',
+        defaultImage: settings?.socialMediaImage || 'https://o2-phi.vercel.app/images/og-poland-travel.jpg'
+      };
+
+      if (cleanPath === '' || cleanPath === '/') {
+        // Homepage SEO
+        seoData = {
+          ...seoData,
+          title: settings?.siteName || 'Ontdek Polen - Jouw Complete Gids voor Polen Reizen',
+          description: settings?.siteDescription || 'Ontdek de mooiste bestemmingen in Polen. Van historische steden tot natuurparken. Complete reisgidsen voor jouw perfecte Polen reis.',
+          image: settings?.socialMediaImage || 'https://o2-phi.vercel.app/images/og-poland-travel.jpg',
+          url: 'https://o2-phi.vercel.app/',
+          type: 'website',
+          keywords: 'Polen reizen, Krakau, Gdansk, Tatra Mountains, Polen vakantie'
+        };
+      } else {
+        // Try to find page by slug
+        const [page] = await db.select().from(pages).where(eq(pages.slug, cleanPath));
+        
+        if (page) {
+          seoData = {
+            ...seoData,
+            title: `${page.title} - Ontdek Polen`,
+            description: page.metaDescription || `Ontdek ${page.title} in Polen. Complete reisgids met tips en informatie voor jouw bezoek aan deze prachtige bestemming.`,
+            image: page.headerImage || seoData.defaultImage,
+            url: `https://o2-phi.vercel.app/${cleanPath}`,
+            type: 'website',
+            keywords: `${page.title}, Polen, reizen, bestemming`,
+            publishedTime: page.createdAt,
+            modifiedTime: page.updatedAt
+          };
+        } else {
+          // Try guides
+          const [guide] = await db.select().from(guides).where(eq(guides.slug, cleanPath));
+          
+          if (guide) {
+            seoData = {
+              ...seoData,
+              title: `${guide.title} - Ontdek Polen`,
+              description: guide.description || `${guide.title} - Complete gids voor jouw Polen reis met praktische tips en insider informatie.`,
+              image: guide.image || seoData.defaultImage,
+              url: `https://o2-phi.vercel.app/${cleanPath}`,
+              type: 'article',
+              keywords: `${guide.title}, Polen reisgids, Polen tips, reizen Polen`,
+              publishedTime: guide.createdAt,
+              modifiedTime: guide.updatedAt
+            };
+          } else {
+            // Fallback for unknown routes
+            seoData = {
+              ...seoData,
+              title: `${cleanPath} - Ontdek Polen`,
+              description: `Ontdek ${cleanPath} in Polen. Jouw complete gids voor reizen naar deze bestemming in Polen.`,
+              image: seoData.defaultImage,
+              url: `https://o2-phi.vercel.app/${cleanPath}`,
+              type: 'website',
+              keywords: `${cleanPath}, Polen, reizen, bestemming`
+            };
+          }
+        }
+      }
+
+      res.json(seoData);
+    } catch (error) {
+      console.error('Error fetching SEO data:', error);
+      res.status(500).json({ error: 'Failed to fetch SEO data' });
+    }
+  });
+
   // PAGES ROUTES
 
   // Get all pages (admin) - PUT ADMIN ROUTES FIRST
@@ -1927,6 +2013,264 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error serving favicon:', error);
       res.status(404).send('Favicon error');
+    }
+  });
+
+  // HEALTH CHECK ENDPOINT
+  app.get("/api/health", async (req, res) => {
+    try {
+      res.json({
+        status: "ok",
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || "development"
+      });
+    } catch (error) {
+      res.status(500).json({ status: "error", message: "Health check failed" });
+    }
+  });
+
+  // AI IMAGE PROCESSING API ROUTES
+  
+  // Process single image with AI
+  app.post("/api/images/process-ai", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || !user.canEditContent) {
+        return res.status(403).json({ message: "Geen toestemming om content te bewerken" });
+      }
+
+      const validation = z.object({
+        imageUrl: z.string().url(),
+        settings: z.object({
+          upscale: z.boolean().optional(),
+          aspectRatio: z.string().optional(),
+          generativeFill: z.boolean().optional()
+        }).optional()
+      }).safeParse(req.body);
+
+      if (!validation.success) {
+        return res.status(400).json({ message: "Invalid input", errors: validation.error.errors });
+      }
+
+      const { imageUrl, settings = {} } = validation.data;
+      
+      const result = await processImageWithAI(imageUrl, settings);
+      res.json(result);
+    } catch (error) {
+      console.error("Error processing image with AI:", error);
+      res.status(500).json({ message: "Failed to process image with AI" });
+    }
+  });
+
+  // Batch process images for destinations
+  app.post("/api/destinations/batch-process-ai", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || !user.canEditContent) {
+        return res.status(403).json({ message: "Geen toestemming om content te bewerken" });
+      }
+
+      // Get all destinations with Cloudinary images
+      const destinations = await storage.getAllDestinations();
+      const cloudinaryImages = destinations
+        .filter(dest => dest.image && dest.image.includes('cloudinary.com'))
+        .map(dest => ({ id: dest.id, url: dest.image!, type: 'destination' as const }));
+
+      if (cloudinaryImages.length === 0) {
+        return res.json({ message: "No Cloudinary images found to process", processed: [] });
+      }
+
+      const results = await batchProcessImages(cloudinaryImages);
+      
+      // Update database with AI results
+      for (const result of results) {
+        if (result.result && !result.error) {
+          await storage.updateDestination(result.id, {
+            aiImage: result.result.aiImageUrl,
+            aiProcessed: true,
+            aiSettings: result.result.settings
+          });
+        }
+      }
+
+      res.json({ 
+        message: `Processed ${results.filter(r => !r.error).length}/${results.length} images`,
+        results 
+      });
+    } catch (error) {
+      console.error("Error batch processing destinations:", error);
+      res.status(500).json({ message: "Failed to batch process destinations" });
+    }
+  });
+
+  // Get AI processing status
+  app.get("/api/images/ai-status", async (req, res) => {
+    try {
+      const destinations = await storage.getAllDestinations();
+      const guides = await storage.getAllGuides();
+      
+      const destStats = {
+        total: destinations.length,
+        cloudinary: destinations.filter(d => d.image && d.image.includes('cloudinary.com')).length,
+        processed: destinations.filter(d => d.aiProcessed).length,
+        hasAiImage: destinations.filter(d => d.aiImage).length
+      };
+      
+      const guideStats = {
+        total: guides.length,
+        cloudinary: guides.filter(g => g.image && g.image.includes('cloudinary.com')).length,
+        processed: guides.filter(g => g.aiProcessed).length,
+        hasAiImage: guides.filter(g => g.aiImage).length
+      };
+      
+      res.json({
+        destinations: destStats,
+        guides: guideStats,
+        summary: {
+          totalProcessable: destStats.cloudinary + guideStats.cloudinary,
+          totalProcessed: destStats.processed + guideStats.processed
+        }
+      });
+    } catch (error) {
+      console.error("Error getting AI status:", error);
+      res.status(500).json({ message: "Failed to get AI processing status" });
+    }
+  });
+
+  // AI Pre-Processing Admin Routes for the Control Center
+  
+  // Get batch processing status for admin interface
+  app.get("/api/ai/batch-processing/status", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const destinations = await storage.getAllDestinations();
+      const guides = await storage.getAllGuides();
+      
+      // Count all images (Cloudinary and local)
+      const allImages = [
+        ...destinations.filter(d => d.image),
+        ...guides.filter(g => g.image)
+      ];
+      
+      const cloudinaryImages = allImages.filter(item => item.image && item.image.includes('cloudinary.com'));
+      const processedImages = [
+        ...destinations.filter(d => d.aiProcessed || d.aiImage),
+        ...guides.filter(g => g.aiProcessed || g.aiImage)
+      ];
+      
+      res.json({
+        total: allImages.length,
+        cloudinary: cloudinaryImages.length,
+        processed: processedImages.length,
+        pending: allImages.length - processedImages.length,
+        destinations: {
+          total: destinations.length,
+          processed: destinations.filter(d => d.aiProcessed || d.aiImage).length
+        },
+        guides: {
+          total: guides.length,
+          processed: guides.filter(g => g.aiProcessed || g.aiImage).length
+        }
+      });
+    } catch (error) {
+      console.error("Error getting batch processing status:", error);
+      res.status(500).json({ message: "Failed to get batch processing status" });
+    }
+  });
+
+  // Start batch processing for all images
+  app.post("/api/ai/batch-processing/start", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const startTime = Date.now();
+      let processedCount = 0;
+      let errorCount = 0;
+      const errors: any[] = [];
+
+      // Get all destinations and guides with Cloudinary images
+      const destinations = await storage.getAllDestinations();
+      const guides = await storage.getAllGuides();
+      
+      const cloudinaryDestinations = destinations.filter(dest => 
+        dest.image && 
+        dest.image.includes('cloudinary.com') && 
+        !dest.aiProcessed
+      );
+      
+      const cloudinaryGuides = guides.filter(guide => 
+        guide.image && 
+        guide.image.includes('cloudinary.com') && 
+        !guide.aiProcessed
+      );
+
+      // Process destinations
+      for (const destination of cloudinaryDestinations) {
+        try {
+          const result = await processImageWithAI(destination.image!, {
+            upscale: true,
+            aspectRatio: '4:3',
+            generativeFill: true
+          });
+          
+          if (result.aiImageUrl) {
+            await storage.updateDestination(destination.id, {
+              aiImage: result.aiImageUrl,
+              aiProcessed: true,
+              aiSettings: result.settings
+            });
+            processedCount++;
+          }
+        } catch (error) {
+          console.error(`Error processing destination ${destination.id}:`, error);
+          errors.push({ type: 'destination', id: destination.id, error: error instanceof Error ? error.message : 'Unknown error' });
+          errorCount++;
+        }
+      }
+
+      // Process guides
+      for (const guide of cloudinaryGuides) {
+        try {
+          const result = await processImageWithAI(guide.image!, {
+            upscale: true,
+            aspectRatio: '4:3',
+            generativeFill: true
+          });
+          
+          if (result.aiImageUrl) {
+            await storage.updateGuide(guide.id, {
+              aiImage: result.aiImageUrl,
+              aiProcessed: true,
+              aiSettings: result.settings
+            });
+            processedCount++;
+          }
+        } catch (error) {
+          console.error(`Error processing guide ${guide.id}:`, error);
+          errors.push({ type: 'guide', id: guide.id, error: error instanceof Error ? error.message : 'Unknown error' });
+          errorCount++;
+        }
+      }
+
+      const totalTime = Date.now() - startTime;
+
+      res.json({
+        processed: processedCount,
+        errors: errorCount,
+        totalTime,
+        message: `AI batch processing completed: ${processedCount} images processed, ${errorCount} errors`,
+        errorDetails: errors.length > 0 ? errors : undefined
+      });
+    } catch (error) {
+      console.error("Error starting batch processing:", error);
+      res.status(500).json({ message: "Failed to start batch processing" });
     }
   });
 
@@ -3323,9 +3667,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         connectionTimeout: parseInt(connectionTimeout),
         idleTimeout: parseInt(idleTimeout),
         region,
-        projectId,
-        status,
-        updatedAt: new Date()
+        projectId
       });
 
       res.json({
