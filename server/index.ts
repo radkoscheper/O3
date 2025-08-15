@@ -84,4 +84,4 @@ if (process.env.NODE_ENV === "development") {
 }
 
 // Export for Vercel
-export default app;
+export { initializeApp };
