@@ -9,6 +9,7 @@ import TravelSlider from "@/components/ui/travel-slider";
 import { DestinationImage, ThumbnailImage, HeroImage } from "@/components/ui/optimized-image";
 import { HeroImageOptimized, DestinationImageOptimized } from "@/components/ui/optimized-image-enhanced";
 import AIEnhancedImage from "@/components/ui/ai-enhanced-image";
+import AIEnhancedHero from "@/components/ui/ai-enhanced-hero";
 import StructuredData from "@/components/ui/structured-data";
 import OpenGraphMeta from "@/components/ui/open-graph-meta";
 import { useSEO } from "@/hooks/use-seo";
@@ -315,28 +316,20 @@ export default function Home() {
         type="website"
         siteName={siteSettings?.siteName || "Ontdek Polen"}
       />
-      {/* Hero Section - Restored Original Layout */}
-      <section 
-        className="relative text-white py-24 px-5 text-center min-h-screen flex items-center justify-center overflow-hidden"
-        style={{
-          backgroundImage: siteSettings?.backgroundImage 
-            ? `url('${siteSettings.backgroundImage}')` 
-            : "url('/images/backgrounds/header.jpg')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat"
-        }}
+      {/* Hero Section - AI Enhanced */}
+      <AIEnhancedHero
+        backgroundImage={siteSettings?.backgroundImage || undefined}
+        aiPreset="landscape"
+        upscale={true}
+        aspectRatio="16:9"
+        showAIBadge={true}
       >
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-navy-dark/40 via-navy-dark/20 to-navy-dark/60 z-10"></div>
-        
-        <div className="relative z-20 max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl md:text-7xl font-playfair font-bold mb-6 text-white drop-shadow-2xl tracking-wide leading-tight">
-            {siteSettings?.siteName || "Ontdek Polen"}
-          </h1>
-          <p className="text-xl md:text-3xl mb-12 text-white/95 font-croatia-body drop-shadow-lg leading-relaxed font-light">
-            {siteSettings?.siteDescription || "Van historische steden tot adembenemende natuurparken"}
-          </p>
+        <h1 className="text-5xl md:text-7xl font-playfair font-bold mb-6 text-white drop-shadow-2xl tracking-wide leading-tight">
+          {siteSettings?.siteName || "Ontdek Polen"}
+        </h1>
+        <p className="text-xl md:text-3xl mb-12 text-white/95 font-croatia-body drop-shadow-lg leading-relaxed font-light">
+          {siteSettings?.siteDescription || "Van historische steden tot adembenemende natuurparken"}
+        </p>
           
           <form 
             onSubmit={(e) => {
@@ -394,8 +387,7 @@ export default function Home() {
               Lees onze gidsen
             </Button>
           </div>
-        </div>
-      </section>
+      </AIEnhancedHero>
 
       {/* Search Results Overlay */}
       {showSearchResults && (
