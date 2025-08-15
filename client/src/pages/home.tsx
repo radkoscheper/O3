@@ -9,7 +9,10 @@ import TravelSlider from "@/components/ui/travel-slider";
 import { DestinationImage, ThumbnailImage, HeroImage } from "@/components/ui/optimized-image";
 import { HeroImageOptimized, DestinationImageOptimized } from "@/components/ui/optimized-image-enhanced";
 import AIEnhancedImage from "@/components/ui/ai-enhanced-image";
-import AIEnhancedHero from "@/components/ui/ai-enhanced-hero";
+import AIToggleHero from "@/components/ui/ai-toggle-hero";
+import EnhancedImage from "@/components/ui/enhanced-image";
+import EnhancedHero from "@/components/ui/enhanced-hero";
+import AIToggleImage from "@/components/ui/ai-toggle-image";
 import StructuredData from "@/components/ui/structured-data";
 import OpenGraphMeta from "@/components/ui/open-graph-meta";
 import { useSEO } from "@/hooks/use-seo";
@@ -316,20 +319,23 @@ export default function Home() {
         type="website"
         siteName={siteSettings?.siteName || "Ontdek Polen"}
       />
-      {/* Hero Section - AI Enhanced */}
-      <AIEnhancedHero
+      {/* Hero Section - AI Toggle */}
+      <AIToggleHero
         backgroundImage={siteSettings?.backgroundImage || undefined}
+        className="min-h-screen flex items-center justify-center text-white py-24 px-5 text-center"
         aiPreset="landscape"
         upscale={true}
         aspectRatio="16:9"
         showAIBadge={true}
+        location="Polen"
       >
-        <h1 className="text-5xl md:text-7xl font-playfair font-bold mb-6 text-white drop-shadow-2xl tracking-wide leading-tight">
-          {siteSettings?.siteName || "Ontdek Polen"}
-        </h1>
-        <p className="text-xl md:text-3xl mb-12 text-white/95 font-croatia-body drop-shadow-lg leading-relaxed font-light">
-          {siteSettings?.siteDescription || "Van historische steden tot adembenemende natuurparken"}
-        </p>
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-5xl md:text-7xl font-playfair font-bold mb-6 text-white drop-shadow-2xl tracking-wide leading-tight">
+            {siteSettings?.siteName || "Ontdek Polen"}
+          </h1>
+          <p className="text-xl md:text-3xl mb-12 text-white/95 font-croatia-body drop-shadow-lg leading-relaxed font-light">
+            {siteSettings?.siteDescription || "Van historische steden tot adembenemende natuurparken"}
+          </p>
           
           <form 
             onSubmit={(e) => {
@@ -387,7 +393,8 @@ export default function Home() {
               Lees onze gidsen
             </Button>
           </div>
-      </AIEnhancedHero>
+        </div>
+      </AIToggleHero>
 
       {/* Search Results Overlay */}
       {showSearchResults && (
@@ -474,65 +481,41 @@ export default function Home() {
             {publishedDestinations.map((destination: any) => {
               const CardContent = (
                 <Card 
-                  className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl transition-all duration-500 border-0 rounded-2xl mx-2"
+                  className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl transition-all duration-500 border-0 rounded-2xl mx-2 h-full flex flex-col"
                 >
-                  <div className="aspect-[4/3] overflow-hidden relative">
-
-                    {/* FASE 4: Gebruik pre-processed AI images als beschikbaar, anders runtime AI */}
-                    {destination.aiImage ? (
-                      // Pre-processed AI URL - instant loading (0ms)
-                      <DestinationImage
-                        src={destination.aiImage}
-                        alt={destination.alt || destination.name || 'Bestemming'}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                      />
-                    ) : destination.image && destination.image.includes('cloudinary.com') ? (
-                      // Runtime AI processing - fallback for non-processed images
-                      <AIEnhancedImage
-                        src={destination.image}
-                        alt={destination.alt || destination.name || 'Bestemming'}
-                        aiPreset="auto"
-                        upscale={true}
-                        aspectRatio="4:3"
-                        autoTag={true}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                        onAIProcessed={(tags, categories) => {
-                          console.log(`🏷️ AI tags voor ${destination.name}:`, tags);
-                        }}
-                      />
-                    ) : (
-                      // Regular image for non-Cloudinary sources
-                      <DestinationImage
-                        src={destination.image || '/images/placeholder.jpg'}
-                        alt={destination.alt || destination.name || 'Bestemming'}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                      />
-                    )}
-                    
-                    {/* AI Enhancement Indicator */}
-                    {destination.aiImage ? (
-                      // Pre-processed AI indicator (best performance)
-                      <div className="absolute top-2 right-2">
-                        <div className="bg-blue-500 bg-opacity-95 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-md">
-                          <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
-                          AI Pro
-                        </div>
-                      </div>
-                    ) : destination.image && destination.image.includes('cloudinary.com') && (
-                      // Runtime AI indicator (fallback)
-                      <div className="absolute top-2 right-2">
-                        <div className="bg-green-500 bg-opacity-90 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-md">
-                          <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
-                          AI
-                        </div>
-                      </div>
-                    )}
+                  <div className="h-64 w-full relative bg-gray-200" style={{ minHeight: '256px' }}>
+                    <img
+                      src={destination.image || '/images/placeholder.jpg'}
+                      alt={destination.alt || destination.name || 'Bestemming'}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                      loading="lazy"
+                      style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        minHeight: '256px',
+                        display: 'block'
+                      }}
+                      onError={(e) => {
+                        console.error(`🚨 Image load error for ${destination.name}:`, e);
+                        console.error(`🚨 Failed URL:`, destination.image);
+                        if (destination.image !== '/images/placeholder.jpg') {
+                          (e.target as HTMLImageElement).src = '/images/placeholder.jpg';
+                        }
+                      }}
+                      onLoad={() => {
+                        console.log(`✅ Image loaded successfully for ${destination.name}:`, destination.image);
+                      }}
+                    />
+                    {/* Debug badge for development */}
+                    <div className="absolute top-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded-md z-10">
+                      {destination.name} IMG
+                    </div>
                   </div>
-                  <div className="p-8">
+                  <div className="p-8 flex flex-col flex-grow">
                     <h3 className="font-playfair font-bold text-2xl text-navy-dark mb-3 leading-tight">
                       {destination.name}
                     </h3>
-                    <p className="font-croatia-body text-navy-medium mb-6 leading-relaxed text-base">
+                    <p className="font-croatia-body text-navy-medium mb-6 leading-relaxed text-base flex-grow">
                       {destination.description || destination.subtitle || "Ontdek deze prachtige bestemming"}
                     </p>
                     <div className="inline-flex items-center justify-center bg-gold-accent hover:bg-gold-light text-navy-dark font-playfair font-bold px-8 py-4 rounded-full transition-all duration-300 hover:scale-105 shadow-luxury hover:shadow-gold text-lg cursor-pointer">
@@ -591,28 +574,20 @@ export default function Home() {
                 </Button>
               </div>
               <div className="flex-1 min-w-80 relative">
-                <div className="relative">
-                  <AIEnhancedImage
-                    src={motivationData?.image || "/images/motivatie/tatra-valley.jpg"}
-                    alt="Motivatie afbeelding"
-                    className="w-full rounded-xl shadow-2xl"
-                    aiPreset="landscape"
-                    upscale={true}
-                    aspectRatio="16:9"
-                    autoTag={true}
-                    lazy={false}
-                    priority={true}
-                    fallback="/images/motivatie/tatra-valley.jpg"
-                    onAIProcessed={(tags) => {
-                      console.log(`🏷️ AI tags voor motivatie image:`, tags);
-                    }}
-                  />
-                  {/* AI Badge voor motivatie section */}
-                  <div className="absolute top-4 right-4 bg-black/70 text-white text-sm px-3 py-1 rounded-md flex items-center gap-2">
-                    <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
-                    AI Enhanced
-                  </div>
-                </div>
+                <AIToggleImage
+                  src={motivationData?.image || "/images/motivatie/tatra-valley.jpg"}
+                  alt="Motivatie afbeelding"
+                  className="w-full rounded-xl shadow-2xl"
+                  location={motivationImageLocation?.locationName}
+                  imageType="motivation"
+                  aspectRatio="16:9"
+                  lazy={false}
+                  priority={true}
+                  fallback="/images/motivatie/tatra-valley.jpg"
+                  onAIProcessed={(tags) => {
+                    console.log(`🏷️ AI tags voor motivatie image:`, tags);
+                  }}
+                />
                 {/* Location name overlay */}
                 {motivationImageLocation?.locationName && (
                   <div className="absolute bottom-4 right-4 glass-card text-navy-dark px-3 py-2 rounded-lg text-sm font-medium shadow-xl border-gold/30">
@@ -665,28 +640,19 @@ export default function Home() {
 
                   const CardContent = (
                     <Card className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl transition-all duration-500 border-0 rounded-2xl mx-2">
-                      <div className="aspect-[4/3] overflow-hidden">
-                        <div className="relative">
-                          <AIEnhancedImage
-                            src={getActivityImage(activity)}
-                            alt={activity.alt || activity.name || 'Activiteit'}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                            aiPreset="auto"
-                            upscale={true}
-                            aspectRatio="4:3"
-                            autoTag={true}
-                            lazy={true}
-                            fallback="/images/activities/default-activity.jpg"
-                            onAIProcessed={(tags) => {
-                              console.log(`🏷️ AI tags voor featured activity ${activity.name}:`, tags);
-                            }}
-                          />
-                          {/* AI Badge voor featured activities */}
-                          <div className="absolute top-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1">
-                            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                            AI
-                          </div>
-                        </div>
+                      <div className="h-64 overflow-hidden">
+                        <AIToggleImage
+                          src={getActivityImage(activity)}
+                          alt={activity.alt || activity.name || 'Activiteit'}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                          location={activity.location}
+                          imageType="activity"
+                          lazy={true}
+                          fallback="/images/activities/default-activity.jpg"
+                          onAIProcessed={(tags) => {
+                            console.log(`🏷️ AI tags voor featured activity ${activity.name}:`, tags);
+                          }}
+                        />
                       </div>
                       <div className="p-8">
                         <h3 className="font-playfair font-bold text-2xl text-navy-dark mb-3 leading-tight">
@@ -786,7 +752,7 @@ export default function Home() {
       {siteSettings?.showOntdekMeer && publishedPages.length > 0 && (
         <section className="py-16 px-5 max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold font-playfair text-gray-900">
+            <h2 className="text-4xl md:text-6xl font-playfair font-bold text-navy-dark tracking-wide">
               Ontdek Meer
             </h2>
             <Link href="/ontdek-meer">
@@ -853,26 +819,19 @@ export default function Home() {
               {publishedGuides.map((guide: any) => {
                 const CardContent = (
                   <Card className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl transition-all duration-500 border-0 rounded-2xl mx-2">
-                    <div className="aspect-[5/3] overflow-hidden relative">
-                      <AIEnhancedImage
+                    <div className="aspect-[5/3] overflow-hidden">
+                      <AIToggleImage
                         src={guide.image}
                         alt={guide.alt}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                        aiPreset="auto"
-                        upscale={true}
+                        imageType="guide"
                         aspectRatio="5:3"
-                        autoTag={true}
                         lazy={true}
                         fallback="/images/guides/default-guide.jpg"
                         onAIProcessed={(tags) => {
                           console.log(`🏷️ AI tags voor guide ${guide.title}:`, tags);
                         }}
                       />
-                      {/* AI Badge voor travel guides */}
-                      <div className="absolute top-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1">
-                        <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></span>
-                        AI
-                      </div>
                     </div>
                     <div className="p-8">
                       <h3 className="font-playfair font-bold text-2xl text-navy-dark mb-3 leading-tight">

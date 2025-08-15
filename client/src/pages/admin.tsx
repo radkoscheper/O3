@@ -494,6 +494,7 @@ export default function Admin() {
     showHighlights: true,
     showOntdekMeer: true,
     showGuides: true,
+    aiEnhancementEnabled: true,
   });
 
   // Check authentication status on component mount
@@ -532,6 +533,7 @@ export default function Admin() {
         showHighlights: siteSettingsQuery.data.showHighlights ?? true,
         showOntdekMeer: siteSettingsQuery.data.showOntdekMeer ?? true,
         showGuides: siteSettingsQuery.data.showGuides ?? true,
+        aiEnhancementEnabled: (siteSettingsQuery.data as any).aiEnhancementEnabled ?? true,
       };
       console.log('Setting new site settings state:', newSettings);
       setSiteSettings(newSettings);
@@ -5673,6 +5675,25 @@ Status: ${settings.status}`;
                         }
                       />
                     </div>
+
+                    {/* AI Enhancement Toggle */}
+                    <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                          <Zap className="h-4 w-4 text-purple-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium">AI Image Enhancement</p>
+                          <p className="text-sm text-gray-500">Automatische beeldverbetering voor alle afbeeldingen</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={siteSettings.aiEnhancementEnabled}
+                        onCheckedChange={(checked) => 
+                          setSiteSettings({...siteSettings, aiEnhancementEnabled: checked})
+                        }
+                      />
+                    </div>
                   </div>
                   
                   <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -5688,6 +5709,7 @@ Status: ${settings.status}`;
                 <p>💡 Tip: Gebruik de achtergrond afbeelding voor een mooie header op je website</p>
                 <p>🎨 Custom CSS en JavaScript worden automatisch geladen op alle pagina's</p>
                 <p>📊 Google Analytics tracking wordt actief zodra je een geldig tracking ID invult</p>
+                <p>🤖 AI Enhancement verbetert automatisch alle afbeeldingen met upscaling en optimalisatie</p>
               </div>
             </TabsContent>
           )}

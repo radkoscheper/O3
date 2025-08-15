@@ -194,6 +194,8 @@ export const siteSettings = pgTable("site_settings", {
   showHighlights: boolean("show_highlights").default(true).notNull(),
   showOntdekMeer: boolean("show_ontdek_meer").default(true).notNull(),
   showGuides: boolean("show_guides").default(true).notNull(),
+  // AI Enhancement Global Setting
+  aiEnhancementEnabled: boolean("ai_enhancement_enabled").default(true).notNull(),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -220,6 +222,7 @@ export const insertSiteSettingsSchema = createInsertSchema(siteSettings).pick({
   showHighlights: true,
   showOntdekMeer: true,
   showGuides: true,
+  aiEnhancementEnabled: true,
   isActive: true,
 });
 

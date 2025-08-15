@@ -51,7 +51,7 @@ export default function TravelSlider({
 
   return (
     <div className={cn("relative", className)} data-testid="travel-slider">
-      <div className="overflow-hidden" ref={emblaRef}>
+      <div className="overflow-visible" ref={emblaRef}>
         <div className="flex">
           {children.map((child, index) => (
             <div

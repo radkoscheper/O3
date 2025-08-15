@@ -9,8 +9,8 @@ import { Link } from "wouter";
 import TravelSlider from "@/components/ui/travel-slider";
 import StructuredData from "@/components/ui/structured-data";
 import OpenGraphMeta from "@/components/ui/open-graph-meta";
-import AIEnhancedHero from "@/components/ui/ai-enhanced-hero";
-import { AIEnhancedImage } from "@/components/ui/ai-enhanced-image";
+import AIToggleHero from "@/components/ui/ai-toggle-hero";
+import AIToggleImage from "@/components/ui/ai-toggle-image";
 import type { SiteSettings, SearchConfig } from "@shared/schema";
 
 // Activities section component
@@ -33,10 +33,15 @@ function ActivitiesSection({ pageTitle, setSelectedActivityId }: { pageTitle?: s
   }
 
   return (
-    <section className="py-16 px-5 max-w-6xl mx-auto">
-      <h2 className="text-3xl font-bold mb-8 font-playfair text-gray-900">
-        Activiteiten in {pageTitle}
-      </h2>
+    <section className="py-4 px-5 max-w-7xl mx-auto">
+      <div className="text-center mb-6">
+        <h2 className="text-4xl md:text-6xl font-playfair font-bold mb-4 text-navy-dark tracking-wide">
+          Activiteiten in {pageTitle}
+        </h2>
+        <p className="text-xl md:text-2xl text-navy-medium font-croatia-body max-w-3xl mx-auto leading-relaxed">
+          De beste ervaringen die {pageTitle} te bieden heeft
+        </p>
+      </div>
       <TravelSlider
         visibleItems={{ mobile: 1, tablet: 2, desktop: 4 }}
         showNavigation={true}
@@ -62,38 +67,31 @@ function ActivitiesSection({ pageTitle, setSelectedActivityId }: { pageTitle?: s
           return (
             <Card 
               key={activity.id}
-              className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 border-none cursor-pointer"
+              className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl transition-all duration-500 border-0 rounded-2xl mx-2 h-full flex flex-col cursor-pointer"
               onClick={handleActivityClick}
             >
               {activity.image && (
-                <div className="relative">
-                  <AIEnhancedImage
+                <div className="h-64 overflow-hidden relative">
+                  <AIToggleImage
                     src={activity.image}
                     alt={activity.alt || activity.name}
-                    className="w-full h-40 object-cover"
-                    aiPreset="auto"
-                    upscale={true}
-                    aspectRatio="16:9"
-                    autoTag={true}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                    imageType="activity"
+
                     lazy={true}
                     fallback="/images/activities/placeholder.svg"
-                    onAIProcessed={(tags) => {
+                    onAIProcessed={(tags: any) => {
                       console.log(`🏷️ AI tags voor ${activity.name}:`, tags);
                     }}
                   />
-                  {/* AI Badge voor activity images */}
-                  <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1">
-                    <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
-                    AI
-                  </div>
                 </div>
               )}
-              <div className="p-4">
-                <h3 className="font-bold font-playfair text-gray-900 mb-2">
+              <div className="p-8 flex flex-col flex-grow">
+                <h3 className="font-playfair font-bold text-2xl text-navy-dark mb-3 leading-tight">
                   {activity.name}
                 </h3>
                 {activity.description && (
-                  <p className="text-sm text-gray-600 font-croatia-body line-clamp-2">
+                  <p className="font-croatia-body text-navy-medium mb-6 leading-relaxed text-base flex-grow">
                     {activity.description}
                   </p>
                 )}
@@ -102,6 +100,9 @@ function ActivitiesSection({ pageTitle, setSelectedActivityId }: { pageTitle?: s
                     {activity.category}
                   </p>
                 )}
+                <div className="inline-flex items-center justify-center bg-gold-accent hover:bg-gold-light text-navy-dark font-playfair font-bold px-8 py-4 rounded-full transition-all duration-300 hover:scale-105 shadow-luxury hover:shadow-gold text-lg mt-4">
+                  Bekijk Details
+                </div>
               </div>
             </Card>
           );
@@ -441,20 +442,23 @@ export default function Page() {
         modifiedTime={page.updatedAt}
       />
       
-      {/* Hero Section - AI Enhanced */}
-      <AIEnhancedHero
+      {/* Hero Section - AI Toggle */}
+      <AIToggleHero
         backgroundImage={getBackgroundImage()}
+        className="min-h-screen flex items-center justify-center text-white py-24 px-5 text-center"
         aiPreset="landscape"
         upscale={true}
         aspectRatio="16:9"
         showAIBadge={true}
+        location={page?.title || "Polen"}
       >
-        <h1 className="text-5xl md:text-7xl font-playfair font-bold mb-6 text-white drop-shadow-2xl tracking-wide leading-tight">
-          {page?.title || "Ontdek Polen"}
-        </h1>
-        <p className="text-xl md:text-3xl mb-12 text-white/95 font-croatia-body drop-shadow-lg leading-relaxed font-light">
-          Mooie plekken in {page?.title} ontdekken
-        </p>
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-5xl md:text-7xl font-playfair font-bold mb-6 text-white drop-shadow-2xl tracking-wide leading-tight">
+            {page?.title || "Ontdek Polen"}
+          </h1>
+          <p className="text-xl md:text-3xl mb-12 text-white/95 font-croatia-body drop-shadow-lg leading-relaxed font-light">
+            Mooie plekken in {page?.title} ontdekken
+          </p>
         
         <form 
           onSubmit={(e) => {
@@ -513,7 +517,8 @@ export default function Page() {
             Plan je bezoek
           </Button>
         </div>
-      </AIEnhancedHero>
+        </div>
+      </AIToggleHero>
 
       {/* Search Results Overlay */}
       {showSearchResults && (
@@ -576,12 +581,11 @@ export default function Page() {
                           <div className="flex items-center space-x-4">
                             {result.image && (
                               <div className="relative">
-                                <AIEnhancedImage
+                                <AIToggleImage
                                   src={result.image}
                                   alt={result.alt || result.name}
                                   className="w-16 h-16 object-cover rounded-lg"
-                                  aiPreset="auto"
-                                  upscale={true}
+                                  imageType="activity"
                                   lazy={true}
                                 />
                                 <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-1 rounded-full text-center" style={{fontSize: '8px', lineHeight: '12px', minWidth: '12px', height: '12px'}}>
@@ -604,12 +608,11 @@ export default function Page() {
                             <div className="flex items-center space-x-4">
                               {result.image && (
                                 <div className="relative">
-                                  <AIEnhancedImage
+                                  <AIToggleImage
                                     src={result.image}
                                     alt={result.alt || result.name}
                                     className="w-16 h-16 object-cover rounded-lg"
-                                    aiPreset="auto"
-                                    upscale={true}
+                                    imageType="activity"
                                     lazy={true}
                                   />
                                   <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-1 rounded-full text-center" style={{fontSize: '8px', lineHeight: '12px', minWidth: '12px', height: '12px'}}>
@@ -672,18 +675,15 @@ export default function Page() {
               
               {selectedActivity.image && (
                 <div className="relative mb-6">
-                  <AIEnhancedImage
+                  <AIToggleImage
                     src={selectedActivity.image}
                     alt={selectedActivity.alt || selectedActivity.name}
                     className="w-full h-64 object-cover rounded-lg"
-                    aiPreset="auto"
-                    upscale={true}
+                    imageType="activity"
                     aspectRatio="16:9"
-                    autoTag={true}
-                    lazy={false}
                     priority={true}
                     fallback="/images/activities/placeholder.svg"
-                    onAIProcessed={(tags) => {
+                    onAIProcessed={(tags: any) => {
                       console.log(`🏷️ AI tags voor activity detail ${selectedActivity.name}:`, tags);
                     }}
                   />
@@ -769,9 +769,14 @@ export default function Page() {
       {/* Location-specific Featured Activities Section */}
       {locationFeaturedActivities.length > 0 && (
         <section className="py-16 px-5 max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold mb-8 font-playfair text-gray-900">
-            Hoogtepunten van {page.title}
-          </h2>
+          <div className="text-center mb-8">
+            <h2 className="text-4xl md:text-6xl font-playfair font-bold mb-4 text-navy-dark tracking-wide">
+              Hoogtepunten van {page.title}
+            </h2>
+            <p className="text-xl md:text-2xl text-navy-medium font-croatia-body max-w-3xl mx-auto leading-relaxed">
+              De beste activiteiten in de regio
+            </p>
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {locationFeaturedActivities
               .sort((a: any, b: any) => (a.ranking || 0) - (b.ranking || 0))
@@ -779,12 +784,11 @@ export default function Page() {
                 const CardContent = (
                   <div className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl transition-shadow duration-300 border-none cursor-pointer text-center">
                     <div className="relative">
-                      <AIEnhancedImage
+                      <AIToggleImage
                         src={activity.image || '/images/activities/placeholder.svg'}
                         alt={activity.alt || activity.name}
                         className="w-16 h-16 mx-auto mb-3 object-cover rounded-lg"
-                        aiPreset="auto"
-                        upscale={true}
+                        imageType="activity"
                         lazy={true}
                         fallback="/images/activities/placeholder.svg"
                       />

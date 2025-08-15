@@ -4,6 +4,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Enhanced image loading animations */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
 :root {
   /* Luxury Polish Travel Palette */
   --background: hsl(0, 0%, 100%);
