@@ -10,6 +10,7 @@ import TravelSlider from "@/components/ui/travel-slider";
 import StructuredData from "@/components/ui/structured-data";
 import OpenGraphMeta from "@/components/ui/open-graph-meta";
 import AIEnhancedHero from "@/components/ui/ai-enhanced-hero";
+import { AIEnhancedImage } from "@/components/ui/ai-enhanced-image";
 import type { SiteSettings, SearchConfig } from "@shared/schema";
 
 // Activities section component
@@ -65,14 +66,27 @@ function ActivitiesSection({ pageTitle, setSelectedActivityId }: { pageTitle?: s
               onClick={handleActivityClick}
             >
               {activity.image && (
-                <img
-                  src={activity.image}
-                  alt={activity.alt || activity.name}
-                  className="w-full h-40 object-cover"
-                  onError={(e) => {
-                    e.currentTarget.src = '/images/activities/placeholder.svg';
-                  }}
-                />
+                <div className="relative">
+                  <AIEnhancedImage
+                    src={activity.image}
+                    alt={activity.alt || activity.name}
+                    className="w-full h-40 object-cover"
+                    aiPreset="auto"
+                    upscale={true}
+                    aspectRatio="16:9"
+                    autoTag={true}
+                    lazy={true}
+                    fallback="/images/activities/placeholder.svg"
+                    onAIProcessed={(tags) => {
+                      console.log(`🏷️ AI tags voor ${activity.name}:`, tags);
+                    }}
+                  />
+                  {/* AI Badge voor activity images */}
+                  <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1">
+                    <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
+                    AI
+                  </div>
+                </div>
               )}
               <div className="p-4">
                 <h3 className="font-bold font-playfair text-gray-900 mb-2">
@@ -561,11 +575,19 @@ export default function Page() {
                         >
                           <div className="flex items-center space-x-4">
                             {result.image && (
-                              <img 
-                                src={result.image} 
-                                alt={result.alt || result.name} 
-                                className="w-16 h-16 object-cover rounded-lg"
-                              />
+                              <div className="relative">
+                                <AIEnhancedImage
+                                  src={result.image}
+                                  alt={result.alt || result.name}
+                                  className="w-16 h-16 object-cover rounded-lg"
+                                  aiPreset="auto"
+                                  upscale={true}
+                                  lazy={true}
+                                />
+                                <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-1 rounded-full text-center" style={{fontSize: '8px', lineHeight: '12px', minWidth: '12px', height: '12px'}}>
+                                  AI
+                                </div>
+                              </div>
                             )}
                             <div className="flex-1">
                               <h4 className="font-semibold text-gray-900 mb-1">{result.name || result.title}</h4>
@@ -581,11 +603,19 @@ export default function Page() {
                           <div className="p-4 hover:bg-gray-50 rounded-lg cursor-pointer border border-gray-200 transition-all duration-200">
                             <div className="flex items-center space-x-4">
                               {result.image && (
-                                <img 
-                                  src={result.image} 
-                                  alt={result.alt || result.name} 
-                                  className="w-16 h-16 object-cover rounded-lg"
-                                />
+                                <div className="relative">
+                                  <AIEnhancedImage
+                                    src={result.image}
+                                    alt={result.alt || result.name}
+                                    className="w-16 h-16 object-cover rounded-lg"
+                                    aiPreset="auto"
+                                    upscale={true}
+                                    lazy={true}
+                                  />
+                                  <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-1 rounded-full text-center" style={{fontSize: '8px', lineHeight: '12px', minWidth: '12px', height: '12px'}}>
+                                    AI
+                                  </div>
+                                </div>
                               )}
                               <div className="flex-1">
                                 <h4 className="font-semibold text-gray-900 mb-1">{result.name || result.title}</h4>
@@ -641,14 +671,27 @@ export default function Page() {
               </div>
               
               {selectedActivity.image && (
-                <img
-                  src={selectedActivity.image}
-                  alt={selectedActivity.alt || selectedActivity.name}
-                  className="w-full h-64 object-cover rounded-lg mb-6"
-                  onError={(e) => {
-                    e.currentTarget.src = '/images/activities/placeholder.svg';
-                  }}
-                />
+                <div className="relative mb-6">
+                  <AIEnhancedImage
+                    src={selectedActivity.image}
+                    alt={selectedActivity.alt || selectedActivity.name}
+                    className="w-full h-64 object-cover rounded-lg"
+                    aiPreset="auto"
+                    upscale={true}
+                    aspectRatio="16:9"
+                    autoTag={true}
+                    lazy={false}
+                    priority={true}
+                    fallback="/images/activities/placeholder.svg"
+                    onAIProcessed={(tags) => {
+                      console.log(`🏷️ AI tags voor activity detail ${selectedActivity.name}:`, tags);
+                    }}
+                  />
+                  <div className="absolute top-4 right-4 bg-black/70 text-white text-sm px-3 py-1 rounded-md flex items-center gap-2">
+                    <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                    AI Enhanced
+                  </div>
+                </div>
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -735,14 +778,20 @@ export default function Page() {
               .map((activity: any) => {
                 const CardContent = (
                   <div className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl transition-shadow duration-300 border-none cursor-pointer text-center">
-                    <img
-                      src={activity.image || '/images/activities/placeholder.svg'}
-                      alt={activity.alt || activity.name}
-                      className="w-16 h-16 mx-auto mb-3 object-cover rounded-lg"
-                      onError={(e) => {
-                        e.currentTarget.src = '/images/activities/placeholder.svg';
-                      }}
-                    />
+                    <div className="relative">
+                      <AIEnhancedImage
+                        src={activity.image || '/images/activities/placeholder.svg'}
+                        alt={activity.alt || activity.name}
+                        className="w-16 h-16 mx-auto mb-3 object-cover rounded-lg"
+                        aiPreset="auto"
+                        upscale={true}
+                        lazy={true}
+                        fallback="/images/activities/placeholder.svg"
+                      />
+                      <div className="absolute -top-1 -right-1 bg-green-500 text-white rounded-full" style={{fontSize: '8px', lineHeight: '10px', width: '10px', height: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                        ✨
+                      </div>
+                    </div>
                     <h3 className="font-bold font-playfair text-gray-900 text-sm">
                       {activity.name}
                     </h3>

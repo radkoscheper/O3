@@ -591,12 +591,28 @@ export default function Home() {
                 </Button>
               </div>
               <div className="flex-1 min-w-80 relative">
-                <HeroImage
-                  src={motivationData?.image || "/images/motivatie/tatra-valley.jpg"}
-                  alt="Motivatie afbeelding"
-                  className="w-full rounded-xl shadow-2xl"
-                  fallback="/images/motivatie/tatra-valley.jpg"
-                />
+                <div className="relative">
+                  <AIEnhancedImage
+                    src={motivationData?.image || "/images/motivatie/tatra-valley.jpg"}
+                    alt="Motivatie afbeelding"
+                    className="w-full rounded-xl shadow-2xl"
+                    aiPreset="landscape"
+                    upscale={true}
+                    aspectRatio="16:9"
+                    autoTag={true}
+                    lazy={false}
+                    priority={true}
+                    fallback="/images/motivatie/tatra-valley.jpg"
+                    onAIProcessed={(tags) => {
+                      console.log(`🏷️ AI tags voor motivatie image:`, tags);
+                    }}
+                  />
+                  {/* AI Badge voor motivatie section */}
+                  <div className="absolute top-4 right-4 bg-black/70 text-white text-sm px-3 py-1 rounded-md flex items-center gap-2">
+                    <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
+                    AI Enhanced
+                  </div>
+                </div>
                 {/* Location name overlay */}
                 {motivationImageLocation?.locationName && (
                   <div className="absolute bottom-4 right-4 glass-card text-navy-dark px-3 py-2 rounded-lg text-sm font-medium shadow-xl border-gold/30">
@@ -650,12 +666,27 @@ export default function Home() {
                   const CardContent = (
                     <Card className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl transition-all duration-500 border-0 rounded-2xl mx-2">
                       <div className="aspect-[4/3] overflow-hidden">
-                        <ThumbnailImage
-                          src={getActivityImage(activity)}
-                          alt={activity.alt || activity.name || 'Activiteit'}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                          fallback="/images/activities/default-activity.jpg"
-                        />
+                        <div className="relative">
+                          <AIEnhancedImage
+                            src={getActivityImage(activity)}
+                            alt={activity.alt || activity.name || 'Activiteit'}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                            aiPreset="auto"
+                            upscale={true}
+                            aspectRatio="4:3"
+                            autoTag={true}
+                            lazy={true}
+                            fallback="/images/activities/default-activity.jpg"
+                            onAIProcessed={(tags) => {
+                              console.log(`🏷️ AI tags voor featured activity ${activity.name}:`, tags);
+                            }}
+                          />
+                          {/* AI Badge voor featured activities */}
+                          <div className="absolute top-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1">
+                            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                            AI
+                          </div>
+                        </div>
                       </div>
                       <div className="p-8">
                         <h3 className="font-playfair font-bold text-2xl text-navy-dark mb-3 leading-tight">
@@ -822,12 +853,26 @@ export default function Home() {
               {publishedGuides.map((guide: any) => {
                 const CardContent = (
                   <Card className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl transition-all duration-500 border-0 rounded-2xl mx-2">
-                    <div className="aspect-[5/3] overflow-hidden">
-                      <img
+                    <div className="aspect-[5/3] overflow-hidden relative">
+                      <AIEnhancedImage
                         src={guide.image}
                         alt={guide.alt}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                        aiPreset="auto"
+                        upscale={true}
+                        aspectRatio="5:3"
+                        autoTag={true}
+                        lazy={true}
+                        fallback="/images/guides/default-guide.jpg"
+                        onAIProcessed={(tags) => {
+                          console.log(`🏷️ AI tags voor guide ${guide.title}:`, tags);
+                        }}
                       />
+                      {/* AI Badge voor travel guides */}
+                      <div className="absolute top-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1">
+                        <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></span>
+                        AI
+                      </div>
                     </div>
                     <div className="p-8">
                       <h3 className="font-playfair font-bold text-2xl text-navy-dark mb-3 leading-tight">
