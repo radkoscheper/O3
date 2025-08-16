@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react'
+import React, { useCallback, useEffect, useRef } from 'react'
 import useEmblaCarousel from 'embla-carousel-react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -24,14 +24,9 @@ export default function TravelSlider({
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: 'start',
     slidesToScroll: 1,
-    breakpoints: {
-      '(min-width: 768px)': { 
-        slidesToScroll: 1
-      },
-      '(min-width: 1024px)': { 
-        slidesToScroll: 1
-      }
-    }
+    dragFree: false,
+    containScroll: 'trimSnaps',
+    loop: false
   })
 
   const scrollPrev = useCallback(() => {
@@ -49,6 +44,42 @@ export default function TravelSlider({
     }
   }, [emblaApi, visibleItems.desktop, visibleItems.tablet, visibleItems.mobile])
 
+  // Dynamic visibility management - ref to track slide elements
+  const slideRefs = useRef<(HTMLDivElement | null)[]>([])
+
+  // Smart visibility control using Intersection Observer
+  useEffect(() => {
+    if (!emblaApi) return
+
+    const carouselContainer = emblaApi.rootNode()
+    if (!carouselContainer) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const slide = entry.target as HTMLDivElement
+          const isVisible = entry.intersectionRatio > 0.1 // 10% threshold for better detection
+          
+          // Smooth fade in/out instead of hard hide
+          slide.style.opacity = isVisible ? '1' : '0'
+          slide.style.pointerEvents = isVisible ? 'auto' : 'none'
+        })
+      },
+      {
+        root: carouselContainer, // Use carousel container as root instead of viewport
+        rootMargin: '0px', // No margin needed since we're within carousel
+        threshold: [0, 0.1, 0.5, 1] // Multiple thresholds for smooth transitions
+      }
+    )
+
+    // Observe all current slide elements
+    slideRefs.current.forEach((slide) => {
+      if (slide) observer.observe(slide)
+    })
+
+    return () => observer.disconnect()
+  }, [emblaApi, children.length])
+
   // Show navigation based on CMS settings and item count
   const shouldShowNavigation = () => {
     if (!showNavigation || !children) return false
@@ -59,10 +90,6 @@ export default function TravelSlider({
   
   const showNavigationButtons = shouldShowNavigation()
 
-  if (!children || children.length === 0) {
-    return null;
-  }
-
   // Calculate flex-basis for carousel items based on visible items
   const getFlexBasis = () => {
     // Ensure we have valid numbers and handle edge cases
@@ -72,9 +99,7 @@ export default function TravelSlider({
       desktop: Math.max(1, visibleItems.desktop || 3)
     };
     
-    // Debug logging to see actual values
-    console.log('🎠 TravelSlider visibleItems:', visibleItems);
-    console.log('🎠 SafeVisibleItems:', safeVisibleItems);
+
     
     return {
       mobile: `${100 / safeVisibleItems.mobile}%`,
@@ -88,8 +113,13 @@ export default function TravelSlider({
   // Generate unique class name for this carousel instance
   const uniqueId = React.useMemo(() => Math.random().toString(36).substr(2, 9), []);
 
+  // Early return after all hooks
+  if (!children || children.length === 0) {
+    return null;
+  }
+
   return (
-    <div className={cn("relative", className)} data-testid="travel-slider" style={{isolation: 'isolate'}}>
+    <div className={cn("relative z-10", className)} data-testid="travel-slider" style={{isolation: 'isolate'}}>
       <style dangerouslySetInnerHTML={{
         __html: `
           .responsive-carousel-item-${uniqueId} {
@@ -109,44 +139,53 @@ export default function TravelSlider({
             }
           }
           
-          /* Shadow overflow fix - allow hover shadows to be visible above other elements */
-          .responsive-carousel-item-${uniqueId}:hover {
-            z-index: 50 !important;
-            position: relative !important;
+          /* Dynamic visibility - no mask needed as JS handles visibility */
+          .carousel-mask-${uniqueId} {
+            /* Mask disabled - using Intersection Observer for smart visibility */
           }
+          
+          /* Equal height carousel with flexible content */
+          .embla__container {
+            display: flex;
+            align-items: stretch;
+          }
+          .embla__slide {
+            min-width: 0;
+            display: flex;
+            align-items: stretch;
+          }
+          .embla__slide > div {
+            display: flex;
+            align-items: stretch;
+            width: 100%;
+          }
+          .embla__slide [class*="Card"] {
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100% !important;
+            height: 100% !important;
+          }
+
         `
       }} />
-      <div 
-        className="embla relative" 
-        ref={emblaRef}
-        style={{
-          overflow: 'visible',
-          margin: '40px 0'
-        }}
-      >
-        <div 
-          className="overflow-hidden"
-          style={{
-            margin: '-40px 0',
-            padding: '40px 0',
-            maskImage: `linear-gradient(to right, transparent 0%, black 1%, black 99%, transparent 100%)`
-          }}
-        >
-          <div className="embla__container flex">
+      <div className={`embla overflow-visible carousel-mask-${uniqueId}`} ref={emblaRef}>
+        <div className="embla__container flex">
             {children.map((child, index) => (
-              <div
-                key={`carousel-item-${index}`}
-                className={`embla__slide flex-none responsive-carousel-item-${uniqueId}`}
-                style={{
-                  transformStyle: 'preserve-3d'
-                }}
-              >
-                <div className="px-2 h-full flex">
-                  {child}
-                </div>
+            <div
+              key={`carousel-item-${index}`}
+              ref={(el) => slideRefs.current[index] = el}
+              className={`embla__slide flex-none responsive-carousel-item-${uniqueId}`}
+              style={{ 
+                opacity: 1, 
+                transition: 'opacity 0.3s ease',
+                pointerEvents: 'auto'
+              }}
+            >
+              <div className="px-2 h-full">
+                {child}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </div>
 
