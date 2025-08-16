@@ -9,6 +9,7 @@ import { Link } from "wouter";
 import TravelSlider from "@/components/ui/travel-slider";
 import StructuredData from "@/components/ui/structured-data";
 import OpenGraphMeta from "@/components/ui/open-graph-meta";
+import Footer from "@/components/ui/footer";
 import type { SiteSettings, SearchConfig } from "@shared/schema";
 
 // Activities section component
@@ -434,25 +435,26 @@ export default function Page() {
         modifiedTime={page.updatedAt}
       />
       
-      {/* Hero Section - WebsiteBuilder Design */}
+      {/* Hero Section - Consistent with Homepage */}
       <section 
-        className="relative bg-cover bg-center text-white py-24 px-5 text-center min-h-screen flex items-center justify-center"
+        className="relative text-white py-12 md:py-16 px-4 md:px-5 text-center h-[50vh] md:h-[70vh] flex items-center justify-center"
         style={{
           backgroundImage: `url('${getBackgroundImage()}')`,
           backgroundSize: "cover",
-          backgroundPosition: "center"
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat"
         }}
         role="banner"
         aria-label={page?.headerImageAlt || `${page?.title} header afbeelding`}
       >
         {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-navy-dark/40 via-navy-dark/20 to-navy-dark/60"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-navy-dark/40 via-navy-dark/20 to-navy-dark/60 z-10"></div>
         
-        <div className="relative z-10 max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl md:text-7xl font-playfair font-bold mb-6 text-white drop-shadow-2xl tracking-wide leading-tight">
+        <div className="relative z-20 max-w-3xl mx-auto text-center">
+          <h1 className="text-3xl md:text-6xl font-playfair font-bold mb-3 md:mb-4 text-white leading-tight">
             {page?.title || "Ontdek Polen"}
           </h1>
-          <p className="text-xl md:text-3xl mb-12 text-white/95 font-croatia-body drop-shadow-lg leading-relaxed font-light">
+          <p className="text-base md:text-xl mb-6 md:mb-8 text-white font-croatia-body leading-relaxed px-2">
             Mooie plekken in {page?.title} ontdekken
           </p>
           
@@ -461,9 +463,9 @@ export default function Page() {
               console.log('Destination page form submit event triggered');
               handleSearch(e);
             }} 
-            className="mt-5 mb-5 relative"
+            className="mt-4 md:mt-6 mb-4 md:mb-6 relative"
           >
-            <div className="relative inline-block">
+            <div className="relative inline-block w-full max-w-md mx-auto">
               <Input
                 type="text"
                 placeholder={searchConfig?.placeholderText || "Zoek activiteiten in deze bestemming..."}
@@ -478,7 +480,7 @@ export default function Page() {
                     console.log('Enter key detected, form should submit');
                   }
                 }}
-                className="py-5 px-8 w-[28rem] max-w-full border-2 border-white/30 rounded-full text-lg text-navy-dark font-croatia-body shadow-2xl backdrop-blur-md bg-white/95 hover:bg-white hover:border-gold-accent transition-all duration-500 focus:border-gold-accent focus:ring-2 focus:ring-gold-accent/50"
+                className="py-3 md:py-4 px-4 md:px-6 w-full border border-white/20 rounded-full text-sm md:text-base text-navy-dark font-croatia-body bg-white/90 hover:bg-white transition-all duration-300 focus:border-gold-accent focus:ring-1 focus:ring-gold-accent/30"
               />
               <Search 
                 className="absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-500 h-5 w-5 cursor-pointer" 
@@ -495,21 +497,21 @@ export default function Page() {
             </div>
           </form>
           
-          <div className="flex flex-col sm:flex-row gap-6 justify-center mt-12">
+          <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center mt-6 md:mt-12 px-4">
             <Button
               asChild
-              className="py-5 px-10 text-lg font-playfair font-medium bg-navy-dark hover:bg-navy-medium text-white rounded-full shadow-2xl hover:shadow-navy-dark/25 transition-all duration-500 border-2 border-navy-dark hover:border-navy-medium hover:scale-105"
+              className="py-4 md:py-5 px-8 md:px-10 text-base md:text-lg font-playfair font-medium bg-navy-dark hover:bg-navy-medium text-white rounded-full transition-all duration-500 border-2 border-navy-dark hover:border-navy-medium hover:scale-105"
             >
               <Link href="/">
-                <ArrowLeft className="w-5 h-5 mr-3" />
+                <ArrowLeft className="w-4 md:w-5 h-4 md:h-5 mr-2 md:mr-3" />
                 Terug naar Home
               </Link>
             </Button>
             <Button
-              className="py-5 px-10 text-lg font-playfair font-medium bg-white/10 backdrop-blur-md hover:bg-white/20 border-2 border-white/40 text-white rounded-full shadow-2xl hover:shadow-white/25 transition-all duration-500 hover:scale-105"
+              className="py-4 md:py-5 px-8 md:px-10 text-base md:text-lg font-playfair font-medium bg-white/10 hover:bg-white/20 border-2 border-white/40 text-white rounded-full transition-all duration-500 hover:scale-105"
               variant="outline"
             >
-              <Calendar className="w-5 h-5 mr-3" />
+              <Calendar className="w-4 md:w-5 h-4 md:h-5 mr-2 md:mr-3" />
               Plan je bezoek
             </Button>
           </div>
@@ -812,27 +814,8 @@ export default function Page() {
         </section>
       )}
 
-      {/* Footer - exact same as homepage */}
-      <footer 
-        className="text-center py-10 px-5 text-white relative"
-        style={{ backgroundColor: "#2f3e46" }}
-      >
-        {/* Admin Link */}
-        <Link href="/admin">
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="absolute top-4 right-4 text-white border-white hover:bg-white hover:text-gray-900"
-          >
-            <Settings className="h-4 w-4 mr-2" />
-            Admin
-          </Button>
-        </Link>
-        
-        <p className="font-croatia-body">
-          &copy; 2025 {(siteSettings as any)?.siteName || "Ontdek Polen"}. Alle rechten voorbehouden.
-        </p>
-      </footer>
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

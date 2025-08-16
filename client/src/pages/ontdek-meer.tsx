@@ -6,31 +6,32 @@ import { Search, Settings, ArrowLeft, MapPin } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import TravelSlider from "@/components/ui/travel-slider";
+import Footer from "@/components/ui/footer";
 import type { SiteSettings } from "@shared/schema";
 
 export default function OntdekMeer() {
   const [searchQuery, setSearchQuery] = useState("");
   
-  // Fetch destinations and guides from API (homepage specific)
-  const { data: destinations = [], isLoading: destinationsLoading } = useQuery({
+  // Fetch destinations and guides from API (homepage specific) with proper typing
+  const { data: destinations = [], isLoading: destinationsLoading } = useQuery<any[]>({
     queryKey: ["/api/destinations/homepage"],
   });
   
-  const { data: guides = [], isLoading: guidesLoading } = useQuery({
+  const { data: guides = [], isLoading: guidesLoading } = useQuery<any[]>({
     queryKey: ["/api/guides/homepage"],
   });
 
-  const { data: pages = [], isLoading: pagesLoading } = useQuery({
+  const { data: pages = [], isLoading: pagesLoading } = useQuery<any[]>({
     queryKey: ["/api/pages"],
   });
 
-  // Fetch highlights from database
-  const { data: highlights = [], isLoading: highlightsLoading } = useQuery({
+  // Fetch highlights from database with proper typing
+  const { data: highlights = [], isLoading: highlightsLoading } = useQuery<any[]>({
     queryKey: ["/api/highlights"],
   });
 
-  // Fetch site settings
-  const { data: siteSettings, isLoading: settingsLoading } = useQuery({
+  // Fetch site settings with proper typing
+  const { data: siteSettings, isLoading: settingsLoading } = useQuery<SiteSettings>({
     queryKey: ["/api/site-settings"],
   });
 
@@ -56,12 +57,12 @@ export default function OntdekMeer() {
         metaKeywords.setAttribute('name', 'keywords');
         document.head.appendChild(metaKeywords);
       }
-      metaKeywords.setAttribute('content', siteSettings.metaKeywords || "Polen, reizen, vakantie, bestemmingen");
+      metaKeywords.setAttribute('content', (siteSettings as any)?.metaKeywords || "Polen, reizen, vakantie, bestemmingen");
       
       // Update favicon - handle enabled/disabled state
       const existingFavicon = document.querySelector('link[rel="icon"]');
       
-      if (siteSettings.faviconEnabled === true && siteSettings.favicon) {
+      if ((siteSettings as any)?.faviconEnabled === true && (siteSettings as any)?.favicon) {
         // Favicon enabled and has path - use server route which checks database
         if (existingFavicon) {
           existingFavicon.setAttribute('href', '/favicon.ico?' + Date.now()); // Cache bust
@@ -84,35 +85,35 @@ export default function OntdekMeer() {
       }
       
       // Add custom CSS
-      if (siteSettings.customCSS) {
+      if ((siteSettings as any)?.customCSS) {
         let customStyle = document.querySelector('#custom-site-css');
         if (!customStyle) {
           customStyle = document.createElement('style');
           customStyle.id = 'custom-site-css';
           document.head.appendChild(customStyle);
         }
-        customStyle.textContent = siteSettings.customCSS;
+        customStyle.textContent = (siteSettings as any).customCSS;
       }
       
       // Add custom JavaScript
-      if (siteSettings.customJS) {
+      if ((siteSettings as any)?.customJS) {
         let customScript = document.querySelector('#custom-site-js');
         if (!customScript) {
           customScript = document.createElement('script');
           customScript.id = 'custom-site-js';
           document.head.appendChild(customScript);
         }
-        customScript.textContent = siteSettings.customJS;
+        customScript.textContent = (siteSettings as any).customJS;
       }
       
       // Add Google Analytics
-      if (siteSettings.googleAnalyticsId) {
+      if ((siteSettings as any)?.googleAnalyticsId) {
         let gaScript = document.querySelector('#google-analytics');
         if (!gaScript) {
           gaScript = document.createElement('script');
           gaScript.id = 'google-analytics';
-          gaScript.async = true;
-          gaScript.src = `https://www.googletagmanager.com/gtag/js?id=${siteSettings.googleAnalyticsId}`;
+          (gaScript as any).async = true;
+          (gaScript as any).src = `https://www.googletagmanager.com/gtag/js?id=${(siteSettings as any).googleAnalyticsId}`;
           document.head.appendChild(gaScript);
           
           const gaConfig = document.createElement('script');
@@ -120,7 +121,7 @@ export default function OntdekMeer() {
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', '${siteSettings.googleAnalyticsId}');
+            gtag('config', '${(siteSettings as any).googleAnalyticsId}');
           `;
           document.head.appendChild(gaConfig);
         }
@@ -167,55 +168,56 @@ export default function OntdekMeer() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#f8f6f1" }}>
-      {/* Hero Section - CHANGED TITLE AND BUTTON */}
+      {/* Hero Section - Consistent with Homepage */}
       <section 
-        className="relative bg-cover bg-center text-white py-24 px-5 text-center min-h-screen flex items-center justify-center"
+        className="relative text-white py-12 md:py-16 px-4 md:px-5 text-center h-[50vh] md:h-[70vh] flex items-center justify-center"
         style={{
-          backgroundImage: siteSettings?.backgroundImage 
-            ? `url('${siteSettings.backgroundImage}')` 
-            : "url('/images/header.jpg')",
+          backgroundImage: (siteSettings as any)?.backgroundImage 
+            ? `url('${(siteSettings as any).backgroundImage}')` 
+            : "url('/images/backgrounds/header.jpg')",
           backgroundSize: "cover",
-          backgroundPosition: "center"
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat"
         }}
       >
         {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-navy-dark/40 via-navy-dark/20 to-navy-dark/60"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-navy-dark/40 via-navy-dark/20 to-navy-dark/60 z-10"></div>
         
-        <div className="relative z-10 max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl md:text-7xl font-playfair font-bold mb-6 text-white drop-shadow-2xl tracking-wide leading-tight">
+        <div className="relative z-20 max-w-3xl mx-auto text-center">
+          <h1 className="text-3xl md:text-6xl font-playfair font-bold mb-3 md:mb-4 text-white leading-tight">
             Ontdek Meer
           </h1>
-          <p className="text-xl md:text-3xl mb-12 text-white/95 font-croatia-body drop-shadow-lg leading-relaxed font-light">
+          <p className="text-base md:text-xl mb-6 md:mb-8 text-white font-croatia-body leading-relaxed px-2">
             Alle bestemmingen, reisgidsen en tips voor je reis naar Polen
           </p>
           
-          <form onSubmit={handleSearch} className="mt-5 mb-5 relative">
-            <div className="relative inline-block">
+          <form onSubmit={handleSearch} className="mt-4 md:mt-6 mb-4 md:mb-6 relative">
+            <div className="relative inline-block w-full max-w-md mx-auto">
               <Input
                 type="text"
                 placeholder="Zoek je perfecte bestemming in Polen..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="py-5 px-8 w-[28rem] max-w-full border-2 border-white/30 rounded-full text-lg text-navy-dark font-croatia-body shadow-2xl backdrop-blur-md bg-white/95 hover:bg-white hover:border-gold-accent transition-all duration-500 focus:border-gold-accent focus:ring-2 focus:ring-gold-accent/50"
+                className="py-3 md:py-4 px-4 md:px-6 w-full border border-white/20 rounded-full text-sm md:text-base text-navy-dark font-croatia-body bg-white/90 hover:bg-white transition-all duration-300 focus:border-gold-accent focus:ring-1 focus:ring-gold-accent/30"
               />
               <Search className="absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-500 h-5 w-5 cursor-pointer" />
             </div>
           </form>
           
-          <div className="flex flex-col sm:flex-row gap-6 justify-center mt-12">
+          <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center mt-6 md:mt-12 px-4">
             <Link href="/">
               <Button
-                className="py-5 px-10 text-lg font-playfair font-medium bg-navy-dark hover:bg-navy-medium text-white rounded-full shadow-2xl hover:shadow-navy-dark/25 transition-all duration-500 border-2 border-navy-dark hover:border-navy-medium hover:scale-105"
+                className="py-4 md:py-5 px-8 md:px-10 text-base md:text-lg font-playfair font-medium bg-navy-dark hover:bg-navy-medium text-white rounded-full transition-all duration-500 border-2 border-navy-dark hover:border-navy-medium hover:scale-105"
               >
-                <ArrowLeft className="w-5 h-5 mr-3" />
+                <ArrowLeft className="w-4 md:w-5 h-4 md:h-5 mr-2 md:mr-3" />
                 Terug naar Home
               </Button>
             </Link>
             <Button
-              className="py-5 px-10 text-lg font-playfair font-medium bg-white/10 backdrop-blur-md hover:bg-white/20 border-2 border-white/40 text-white rounded-full shadow-2xl hover:shadow-white/25 transition-all duration-500 hover:scale-105"
+              className="py-4 md:py-5 px-8 md:px-10 text-base md:text-lg font-playfair font-medium bg-white/10 hover:bg-white/20 border-2 border-white/40 text-white rounded-full transition-all duration-500 hover:scale-105"
               variant="outline"
             >
-              <MapPin className="w-5 h-5 mr-3" />
+              <MapPin className="w-4 md:w-5 h-4 md:h-5 mr-2 md:mr-3" />
               Verken alles
             </Button>
           </div>
@@ -440,27 +442,8 @@ export default function OntdekMeer() {
         </div>
       </section>
 
-      {/* Footer - EXACT SAME AS HOMEPAGE */}
-      <footer 
-        className="text-center py-10 px-5 text-white relative"
-        style={{ backgroundColor: "#2f3e46" }}
-      >
-        {/* Admin Link */}
-        <Link href="/admin">
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="absolute top-4 right-4 text-white border-white hover:bg-white hover:text-gray-900"
-          >
-            <Settings className="h-4 w-4 mr-2" />
-            Admin
-          </Button>
-        </Link>
-        
-        <p className="font-croatia-body">
-          &copy; 2025 {siteSettings?.siteName || "Ontdek Polen"}. Alle rechten voorbehouden.
-        </p>
-      </footer>
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

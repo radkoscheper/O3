@@ -695,6 +695,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+
+
   // Get all active destinations for admin
   app.get("/api/admin/destinations", requireAuth, async (req, res) => {
     try {

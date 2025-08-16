@@ -239,6 +239,8 @@ export class DatabaseStorage implements IStorage {
     return result.rows as Destination[];
   }
 
+
+
   async getDeletedDestinations(): Promise<Destination[]> {
     const result = await db.execute(sql`SELECT * FROM destinations WHERE is_deleted = TRUE ORDER BY deleted_at DESC`);
     return result.rows as Destination[];

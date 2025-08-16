@@ -20,8 +20,12 @@ import {
   Clock,
   CheckCircle,
   AlertTriangle,
-  TrendingUp
+  TrendingUp,
+  Home,
+  ArrowLeft
 } from "lucide-react";
+import { Link } from "wouter";
+import Footer from "@/components/ui/footer";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -138,7 +142,7 @@ export default function AdminPerformance() {
       
       toast({
         title: result.success ? "Performance test voltooid" : "Performance test gefaald",
-        description: result.success 
+        description: result.success ? `Laadtijd: ${result.loadTime}ms` : result.error 
           ? `Laadtijd: ${result.loadTime}ms` 
           : result.error,
         variant: result.success ? "default" : "destructive"
