@@ -817,7 +817,7 @@ export default function Home() {
 
       {/* Travel Guides - Luxury WebsiteBuilder Design */}
       {siteSettings?.showGuides && (
-        <section className="py-4 px-5 bg-white">
+        <section className="py-0 px-5 bg-white -mt-12">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-6">
               <h2 className="text-4xl md:text-6xl font-playfair font-bold mb-4 text-navy-dark tracking-wide">

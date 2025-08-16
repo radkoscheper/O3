@@ -83,10 +83,10 @@ export default function TravelSlider({
     };
   };
   
+  const flexBasis = getFlexBasis();
+  
   // Generate unique class name for this carousel instance
   const uniqueId = React.useMemo(() => Math.random().toString(36).substr(2, 9), []);
-
-  const flexBasis = getFlexBasis();
 
   return (
     <div className={cn("relative", className)} data-testid="travel-slider" style={{isolation: 'isolate'}}>
