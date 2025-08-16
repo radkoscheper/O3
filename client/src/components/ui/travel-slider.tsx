@@ -108,29 +108,45 @@ export default function TravelSlider({
               max-width: ${flexBasis.desktop} !important;
             }
           }
+          
+          /* Shadow overflow fix - allow hover shadows to be visible above other elements */
+          .responsive-carousel-item-${uniqueId}:hover {
+            z-index: 50 !important;
+            position: relative !important;
+          }
         `
       }} />
       <div 
-        className="embla overflow-hidden relative" 
+        className="embla relative" 
         ref={emblaRef}
         style={{
-          maskImage: `linear-gradient(to right, transparent 0%, black 1%, black 99%, transparent 100%)`
+          overflow: 'visible',
+          margin: '40px 0'
         }}
       >
-        <div className="embla__container flex">
-          {children.map((child, index) => (
-            <div
-              key={`carousel-item-${index}`}
-              className={`embla__slide flex-none responsive-carousel-item-${uniqueId}`}
-              style={{
-                transformStyle: 'preserve-3d'
-              }}
-            >
-              <div className="px-2 h-full">
-                {child}
+        <div 
+          className="overflow-hidden"
+          style={{
+            margin: '-40px 0',
+            padding: '40px 0',
+            maskImage: `linear-gradient(to right, transparent 0%, black 1%, black 99%, transparent 100%)`
+          }}
+        >
+          <div className="embla__container flex">
+            {children.map((child, index) => (
+              <div
+                key={`carousel-item-${index}`}
+                className={`embla__slide flex-none responsive-carousel-item-${uniqueId}`}
+                style={{
+                  transformStyle: 'preserve-3d'
+                }}
+              >
+                <div className="px-2 h-full">
+                  {child}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 
