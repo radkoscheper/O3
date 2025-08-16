@@ -494,6 +494,9 @@ export default function Admin() {
     showHighlights: true,
     showOntdekMeer: true,
     showGuides: true,
+    maxDestinationsVisible: 4,
+    maxHighlightsVisible: 4,
+    maxGuidesVisible: 2,
   });
 
   // Check authentication status on component mount
@@ -532,6 +535,9 @@ export default function Admin() {
         showHighlights: siteSettingsQuery.data.showHighlights ?? true,
         showOntdekMeer: siteSettingsQuery.data.showOntdekMeer ?? true,
         showGuides: siteSettingsQuery.data.showGuides ?? true,
+        maxDestinationsVisible: siteSettingsQuery.data.maxDestinationsVisible ?? 4,
+        maxHighlightsVisible: siteSettingsQuery.data.maxHighlightsVisible ?? 4,
+        maxGuidesVisible: siteSettingsQuery.data.maxGuidesVisible ?? 2,
       };
       console.log('Setting new site settings state:', newSettings);
       setSiteSettings(newSettings);
@@ -1174,7 +1180,7 @@ export default function Admin() {
       const result = await response.json();
       console.log('Site settings saved successfully:', result);
 
-      // Update local state immediately with saved values
+      // Update local state immediately with saved values - INCLUDE ALL CAROUSEL SETTINGS
       const updatedSettings = {
         siteName: result.siteName || '',
         siteDescription: result.siteDescription || '',
@@ -1186,9 +1192,19 @@ export default function Admin() {
         logoImage: result.logoImage || '',
         logoImageAlt: result.logoImageAlt || '',
         socialMediaImage: result.socialMediaImage || '',
+        headerOverlayEnabled: result.headerOverlayEnabled || false,
+        headerOverlayOpacity: result.headerOverlayOpacity || 30,
         customCSS: result.customCSS || '',
         customJS: result.customJS || '',
         googleAnalyticsId: result.googleAnalyticsId || '',
+        showDestinations: result.showDestinations ?? true,
+        showMotivation: result.showMotivation ?? true,
+        showHighlights: result.showHighlights ?? true,
+        showOntdekMeer: result.showOntdekMeer ?? true,
+        showGuides: result.showGuides ?? true,
+        maxDestinationsVisible: result.maxDestinationsVisible ?? 4,
+        maxHighlightsVisible: result.maxHighlightsVisible ?? 4,
+        maxGuidesVisible: result.maxGuidesVisible ?? 2,
       };
       console.log('Updating local state with:', updatedSettings);
       setSiteSettings(updatedSettings);
@@ -1200,6 +1216,7 @@ export default function Admin() {
 
       // Refresh site settings query and invalidate cache
       queryClient.invalidateQueries({ queryKey: ['/api/site-settings'] });
+      queryClient.removeQueries({ queryKey: ['/api/site-settings'] }); // Force removal from cache
       await siteSettingsQuery.refetch();
       
     } catch (error) {
@@ -5675,6 +5692,96 @@ Status: ${settings.status}`;
                     </div>
                   </div>
                   
+                  <div className="mt-6 p-4 bg-gray-50 border rounded-lg">
+                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                      🎛️ Carousel Instellingen
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Bepaal hoeveel items maximaal zichtbaar zijn in elke homepage carousel
+                    </p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Destinations Carousel */}
+                      <div className="space-y-2">
+                        <Label htmlFor="maxDestinationsVisible" className="text-sm font-medium">
+                          🏔️ Max Bestemmingen (Desktop)
+                        </Label>
+                        <Select
+                          value={siteSettings.maxDestinationsVisible?.toString() || "4"}
+                          onValueChange={(value) => 
+                            setSiteSettings({...siteSettings, maxDestinationsVisible: parseInt(value)})
+                          }
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 item</SelectItem>
+                            <SelectItem value="2">2 items</SelectItem>
+                            <SelectItem value="3">3 items</SelectItem>
+                            <SelectItem value="4">4 items (standaard)</SelectItem>
+                            <SelectItem value="5">5 items</SelectItem>
+                            <SelectItem value="6">6 items</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Highlights Carousel */}
+                      <div className="space-y-2">
+                        <Label htmlFor="maxHighlightsVisible" className="text-sm font-medium">
+                          ✨ Max Uitgelichte Activiteiten (Desktop)
+                        </Label>
+                        <Select
+                          value={siteSettings.maxHighlightsVisible?.toString() || "4"}
+                          onValueChange={(value) => 
+                            setSiteSettings({...siteSettings, maxHighlightsVisible: parseInt(value)})
+                          }
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 item</SelectItem>
+                            <SelectItem value="2">2 items</SelectItem>
+                            <SelectItem value="3">3 items</SelectItem>
+                            <SelectItem value="4">4 items (standaard)</SelectItem>
+                            <SelectItem value="5">5 items</SelectItem>
+                            <SelectItem value="6">6 items</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Guides Carousel */}
+                      <div className="space-y-2">
+                        <Label htmlFor="maxGuidesVisible" className="text-sm font-medium">
+                          📖 Max Reizen (Desktop)
+                        </Label>
+                        <Select
+                          value={siteSettings.maxGuidesVisible?.toString() || "2"}
+                          onValueChange={(value) => 
+                            setSiteSettings({...siteSettings, maxGuidesVisible: parseInt(value)})
+                          }
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 item</SelectItem>
+                            <SelectItem value="2">2 items (standaard)</SelectItem>
+                            <SelectItem value="3">3 items</SelectItem>
+                            <SelectItem value="4">4 items</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                      <p className="text-xs text-blue-700">
+                        📱 <strong>Mobile/Tablet:</strong> Op kleinere schermen worden automatisch minder items getoond (1-2 items op mobile, 2-3 op tablet)
+                      </p>
+                    </div>
+                  </div>
+
                   <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-sm text-blue-800">
                       <strong>💡 Tip:</strong> Uitgeschakelde secties worden volledig verborgen op de homepage. 

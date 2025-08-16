@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, useEffect } from 'react'
 import useEmblaCarousel from 'embla-carousel-react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -17,7 +17,7 @@ interface TravelSliderProps {
 
 export default function TravelSlider({ 
   children, 
-  visibleItems = { mobile: 1, tablet: 2, desktop: 4 },
+  visibleItems = { mobile: 1, tablet: 2, desktop: 3 },
   showNavigation = true,
   className 
 }: TravelSliderProps) {
@@ -26,10 +26,10 @@ export default function TravelSlider({
     slidesToScroll: 1,
     breakpoints: {
       '(min-width: 768px)': { 
-        slidesToScroll: visibleItems.tablet 
+        slidesToScroll: 1
       },
       '(min-width: 1024px)': { 
-        slidesToScroll: visibleItems.desktop 
+        slidesToScroll: 1
       }
     }
   })
@@ -42,32 +42,93 @@ export default function TravelSlider({
     if (emblaApi) emblaApi.scrollNext()
   }, [emblaApi])
 
-  // Don't show navigation if we have 4 or fewer items
-  const showNavigationButtons = showNavigation && children && children.length > visibleItems.desktop
+  // Force re-initialization when visibleItems change
+  useEffect(() => {
+    if (emblaApi) {
+      emblaApi.reInit()
+    }
+  }, [emblaApi, visibleItems.desktop, visibleItems.tablet, visibleItems.mobile])
+
+  // Show navigation based on CMS settings and item count
+  const shouldShowNavigation = () => {
+    if (!showNavigation || !children) return false
+    
+    // Always show navigation if more items than visible
+    return children.length > visibleItems.desktop
+  }
+  
+  const showNavigationButtons = shouldShowNavigation()
 
   if (!children || children.length === 0) {
     return null;
   }
 
+  // Calculate flex-basis for carousel items based on visible items
+  const getFlexBasis = () => {
+    // Ensure we have valid numbers and handle edge cases
+    const safeVisibleItems = {
+      mobile: Math.max(1, visibleItems.mobile || 1),
+      tablet: Math.max(1, visibleItems.tablet || 2), 
+      desktop: Math.max(1, visibleItems.desktop || 3)
+    };
+    
+    // Debug logging to see actual values
+    console.log('🎠 TravelSlider visibleItems:', visibleItems);
+    console.log('🎠 SafeVisibleItems:', safeVisibleItems);
+    
+    return {
+      mobile: `${100 / safeVisibleItems.mobile}%`,
+      tablet: `${100 / safeVisibleItems.tablet}%`,
+      desktop: `${100 / safeVisibleItems.desktop}%`
+    };
+  };
+  
+  // Generate unique class name for this carousel instance
+  const uniqueId = React.useMemo(() => Math.random().toString(36).substr(2, 9), []);
+
+  const flexBasis = getFlexBasis();
+
   return (
     <div className={cn("relative", className)} data-testid="travel-slider" style={{isolation: 'isolate'}}>
-      <div className="embla overflow-hidden" ref={emblaRef}>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .responsive-carousel-item-${uniqueId} {
+            flex: 0 0 ${flexBasis.mobile} !important;
+            max-width: ${flexBasis.mobile} !important;
+          }
+          @media (min-width: 768px) {
+            .responsive-carousel-item-${uniqueId} {
+              flex: 0 0 ${flexBasis.tablet} !important;
+              max-width: ${flexBasis.tablet} !important;
+            }
+          }
+          @media (min-width: 1024px) {
+            .responsive-carousel-item-${uniqueId} {
+              flex: 0 0 ${flexBasis.desktop} !important;
+              max-width: ${flexBasis.desktop} !important;
+            }
+          }
+        `
+      }} />
+      <div 
+        className="embla overflow-hidden relative" 
+        ref={emblaRef}
+        style={{
+          maskImage: `linear-gradient(to right, transparent 0%, black 1%, black 99%, transparent 100%)`
+        }}
+      >
         <div className="embla__container flex">
           {children.map((child, index) => (
             <div
-              key={index}
-              className={cn(
-                "embla__slide flex-none flex",
-                // Mobile: full width (1 item)
-                "w-full",
-                // Tablet: half width (2 items) 
-                visibleItems.tablet === 2 ? "md:w-1/2" : visibleItems.tablet === 1 ? "md:w-full" : "md:w-1/3",
-                // Desktop: based on visibleItems.desktop
-                visibleItems.desktop === 4 ? "lg:w-1/4" : visibleItems.desktop === 2 ? "lg:w-1/2" : visibleItems.desktop === 3 ? "lg:w-1/3" : "lg:w-full"
-              )}
-              style={{transformStyle: 'preserve-3d'}}
+              key={`carousel-item-${index}`}
+              className={`embla__slide flex-none responsive-carousel-item-${uniqueId}`}
+              style={{
+                transformStyle: 'preserve-3d'
+              }}
             >
-              {child}
+              <div className="px-2 h-full">
+                {child}
+              </div>
             </div>
           ))}
         </div>
@@ -98,8 +159,8 @@ export default function TravelSlider({
         </>
       )}
 
-      {/* Scroll Indicator Dots (only show if more than visible items) */}
-      {children.length > visibleItems.desktop && (
+      {/* Scroll Indicator Dots */}
+      {showNavigationButtons && (
         <div className="flex justify-center mt-6 space-x-2">
           {Array.from({ length: Math.ceil(children.length / visibleItems.desktop) }).map((_, index) => (
             <div

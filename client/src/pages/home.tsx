@@ -105,9 +105,13 @@ export default function Home() {
     },
   });
 
-  // Fetch site settings
+  // Fetch site settings - disable cache to always get fresh data
   const { data: siteSettings, isLoading: settingsLoading } = useQuery<SiteSettings>({
     queryKey: ["/api/site-settings"],
+    staleTime: 0, // Always consider stale  
+    gcTime: 0, // Don't cache (updated from cacheTime in v5)
+    refetchOnMount: 'always', // Always refetch on mount
+    refetchOnWindowFocus: true, // Refetch when window gains focus
   });
 
   // Fetch search configuration for homepage context
@@ -475,7 +479,11 @@ export default function Home() {
             </p>
           </div>
           <TravelSlider
-            visibleItems={{ mobile: 1, tablet: 2, desktop: 4 }}
+            visibleItems={{ 
+              mobile: 1, 
+              tablet: 2, 
+              desktop: Math.max(1, siteSettings?.maxDestinationsVisible || 4)
+            }}
             showNavigation={true}
             className="mx-auto"
           >
@@ -632,7 +640,11 @@ export default function Home() {
             </div>
             
             <TravelSlider
-              visibleItems={{ mobile: 1, tablet: 2, desktop: 4 }}
+              visibleItems={{ 
+                mobile: 1, 
+                tablet: 2, 
+                desktop: Math.max(1, siteSettings?.maxHighlightsVisible || 4)
+              }}
               showNavigation={true}
               className="mx-auto"
             >
@@ -823,7 +835,11 @@ export default function Home() {
             </div>
             
             <TravelSlider
-              visibleItems={{ mobile: 1, tablet: 2, desktop: 2 }}
+              visibleItems={{ 
+                mobile: 1, 
+                tablet: 2, 
+                desktop: Math.max(1, siteSettings?.maxGuidesVisible || 2)
+              }}
               showNavigation={true}
               className="mx-auto"
             >

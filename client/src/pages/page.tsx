@@ -12,7 +12,11 @@ import OpenGraphMeta from "@/components/ui/open-graph-meta";
 import type { SiteSettings, SearchConfig } from "@shared/schema";
 
 // Activities section component
-function ActivitiesSection({ pageTitle, setSelectedActivityId }: { pageTitle?: string, setSelectedActivityId: (id: string | null) => void }) {
+function ActivitiesSection({ pageTitle, setSelectedActivityId, siteSettings }: { 
+  pageTitle?: string, 
+  setSelectedActivityId: (id: string | null) => void,
+  siteSettings?: any 
+}) {
   const { data: locationActivities, isLoading } = useQuery({
     queryKey: ['/api/activities/location', pageTitle],
     queryFn: async () => {
@@ -36,7 +40,11 @@ function ActivitiesSection({ pageTitle, setSelectedActivityId }: { pageTitle?: s
         Activiteiten in {pageTitle}
       </h2>
       <TravelSlider
-        visibleItems={{ mobile: 1, tablet: 2, desktop: 4 }}
+        visibleItems={{ 
+          mobile: 1, 
+          tablet: 2, 
+          desktop: siteSettings?.maxHighlightsVisible || 4 
+        }}
         showNavigation={true}
         className="mx-auto"
       >
@@ -624,7 +632,11 @@ export default function Page() {
       )}
 
       {/* Activities Section - same style as homepage destinations grid */}
-      <ActivitiesSection pageTitle={page?.title} setSelectedActivityId={setSelectedActivityId} />
+      <ActivitiesSection 
+        pageTitle={page?.title} 
+        setSelectedActivityId={setSelectedActivityId}
+        siteSettings={siteSettings}
+      />
 
       {/* Content Section */}
       <section id="content-section" className="py-16 px-5 max-w-6xl mx-auto">

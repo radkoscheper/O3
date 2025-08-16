@@ -194,6 +194,10 @@ export const siteSettings = pgTable("site_settings", {
   showHighlights: boolean("show_highlights").default(true).notNull(),
   showOntdekMeer: boolean("show_ontdek_meer").default(true).notNull(),
   showGuides: boolean("show_guides").default(true).notNull(),
+  // Homepage Carousel Settings - Max items visible per carousel
+  maxDestinationsVisible: integer("max_destinations_visible").default(4).notNull(),
+  maxHighlightsVisible: integer("max_highlights_visible").default(4).notNull(),
+  maxGuidesVisible: integer("max_guides_visible").default(2).notNull(),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -220,6 +224,9 @@ export const insertSiteSettingsSchema = createInsertSchema(siteSettings).pick({
   showHighlights: true,
   showOntdekMeer: true,
   showGuides: true,
+  maxDestinationsVisible: true,
+  maxHighlightsVisible: true,
+  maxGuidesVisible: true,
   isActive: true,
 });
 
