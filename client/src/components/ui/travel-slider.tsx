@@ -141,7 +141,7 @@ export default function TravelSlider({
                   transformStyle: 'preserve-3d'
                 }}
               >
-                <div className="px-2 h-full">
+                <div className="px-2 h-full flex">
                   {child}
                 </div>
               </div>
