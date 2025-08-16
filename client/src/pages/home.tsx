@@ -6,13 +6,9 @@ import { Search, Settings, MapPin, Calendar } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import TravelSlider from "@/components/ui/travel-slider";
-import UniversalHero from "@/components/ui/universal-hero";
-import UniversalCarousel from "@/components/ui/universal-carousel";
-import UniversalFooter from "@/components/ui/universal-footer";
 import { DestinationImage, ThumbnailImage, HeroImage } from "@/components/ui/optimized-image";
 import { HeroImageOptimized, DestinationImageOptimized } from "@/components/ui/optimized-image-enhanced";
 import AIEnhancedImage from "@/components/ui/ai-enhanced-image";
-// import AIEnhancedHero from "@/components/ui/ai-enhanced-hero"; // AI enhancement beschikbaar in AI_ENHANCEMENT_DOCUMENTATION.md
 import StructuredData from "@/components/ui/structured-data";
 import OpenGraphMeta from "@/components/ui/open-graph-meta";
 import { useSEO } from "@/hooks/use-seo";
@@ -319,37 +315,87 @@ export default function Home() {
         type="website"
         siteName={siteSettings?.siteName || "Ontdek Polen"}
       />
-      {/* Universal Hero Section */}
-      <UniversalHero
-        backgroundImage={siteSettings?.backgroundImage}
-        title={siteSettings?.siteName || "Ontdek Polen"}
-        subtitle={siteSettings?.siteDescription || "Van historische steden tot adembenemende natuurparken"}
-        showSearchBar={true}
-        searchPlaceholder={searchConfig?.placeholderText || "Zoek je perfecte bestemming in Polen..."}
-        searchQuery={searchQuery}
-        onSearchChange={(value) => {
-          console.log('Search input changed:', value);
-          setSearchQuery(value);
+      {/* Hero Section - Restored Original Layout */}
+      <section 
+        className="relative text-white py-24 px-5 text-center min-h-screen flex items-center justify-center overflow-hidden"
+        style={{
+          backgroundImage: siteSettings?.backgroundImage 
+            ? `url('${siteSettings.backgroundImage}')` 
+            : "url('/images/backgrounds/header.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat"
         }}
-        onSearchSubmit={(e) => {
-          console.log('Form submit event triggered');
-          handleSearch(e);
-        }}
-        buttons={[
-          {
-            text: "Plan je reis",
-            onClick: handlePlanTrip,
-            variant: 'primary' as const,
-            icon: <MapPin className="w-5 h-5" />
-          },
-          {
-            text: "Lees onze gidsen", 
-            onClick: handleReadGuides,
-            variant: 'secondary' as const,
-            icon: <Calendar className="w-5 h-5" />
-          }
-        ]}
-      />
+      >
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-navy-dark/40 via-navy-dark/20 to-navy-dark/60 z-10"></div>
+        
+        <div className="relative z-20 max-w-4xl mx-auto text-center">
+          <h1 className="text-5xl md:text-7xl font-playfair font-bold mb-6 text-white drop-shadow-2xl tracking-wide leading-tight">
+            {siteSettings?.siteName || "Ontdek Polen"}
+          </h1>
+          <p className="text-xl md:text-3xl mb-12 text-white/95 font-croatia-body drop-shadow-lg leading-relaxed font-light">
+            {siteSettings?.siteDescription || "Van historische steden tot adembenemende natuurparken"}
+          </p>
+          
+          <form 
+            onSubmit={(e) => {
+              console.log('Form submit event triggered');
+              handleSearch(e);
+            }} 
+            className="mt-5 mb-5 relative"
+          >
+            <div className="relative inline-block">
+              <Input
+                type="text"
+                placeholder={searchConfig?.placeholderText || "Zoek je perfecte bestemming in Polen..."}
+                value={searchQuery}
+                onChange={(e) => {
+                  console.log('Search input changed:', e.target.value);
+                  setSearchQuery(e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  console.log('Key pressed:', e.key);
+                  if (e.key === 'Enter') {
+                    console.log('Enter key detected, form should submit');
+                  }
+                }}
+                className="py-5 px-8 w-[28rem] max-w-full border-2 border-white/30 rounded-full text-lg text-navy-dark font-croatia-body shadow-2xl backdrop-blur-md bg-white/95 hover:bg-white hover:border-gold-accent transition-all duration-500 focus:border-gold-accent focus:ring-2 focus:ring-gold-accent/50"
+              />
+              <Search 
+                className="absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-500 h-5 w-5 cursor-pointer" 
+                onClick={() => {
+                  console.log('Search icon clicked');
+                  if (searchQuery.trim()) {
+                    const form = document.querySelector('form');
+                    if (form) {
+                      form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                    }
+                  }
+                }}
+              />
+            </div>
+          </form>
+          
+          <div className="flex flex-col sm:flex-row gap-6 justify-center mt-12">
+            <Button
+              onClick={handlePlanTrip}
+              className="py-5 px-10 text-lg font-playfair font-medium bg-navy-dark hover:bg-navy-medium text-white rounded-full shadow-2xl hover:shadow-navy-dark/25 transition-all duration-500 border-2 border-navy-dark hover:border-navy-medium hover:scale-105"
+            >
+              <MapPin className="w-5 h-5 mr-3" />
+              Plan je reis
+            </Button>
+            <Button
+              onClick={handleReadGuides}
+              className="py-5 px-10 text-lg font-playfair font-medium bg-white/10 backdrop-blur-md hover:bg-white/20 border-2 border-white/40 text-white rounded-full shadow-2xl hover:shadow-white/25 transition-all duration-500 hover:scale-105"
+              variant="outline"
+            >
+              <Calendar className="w-5 h-5 mr-3" />
+              Lees onze gidsen
+            </Button>
+          </div>
+        </div>
+      </section>
 
       {/* Search Results Overlay */}
       {showSearchResults && (
@@ -417,90 +463,119 @@ export default function Home() {
         </div>
       )}
 
-      {/* Destinations Section - Universal Carousel */}
+      {/* Destinations Section - Luxury Layout */}
       {siteSettings?.showDestinations && (
-        <UniversalCarousel
-          title="Ontdek Polen"
-          subtitle="Van historische steden tot adembenemende natuurparken"
-          items={publishedDestinations}
-          visibleItems={{ mobile: 1, tablet: 2, desktop: 4 }}
-          showNavigation={true}
-          renderCard={(destination, defaultCard) => {
-            // Custom render to support AI images
-            return (
-              <Card 
-                className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl transition-all duration-500 border-0 rounded-2xl mx-4 h-full flex flex-col relative hover:z-10"
-              >
-                <div className="aspect-[4/3] overflow-hidden relative">
-                  {/* FASE 4: Gebruik pre-processed AI images als beschikbaar, anders runtime AI */}
-                  {destination.aiImage ? (
-                    // Pre-processed AI URL - instant loading (0ms)
-                    <DestinationImage
-                      src={destination.aiImage}
-                      alt={destination.alt || destination.name || 'Bestemming'}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                    />
-                  ) : destination.image && destination.image.includes('cloudinary.com') ? (
-                    // Runtime AI processing - fallback for non-processed images
-                    <AIEnhancedImage
-                      src={destination.image}
-                      alt={destination.alt || destination.name || 'Bestemming'}
-                      aiPreset="auto"
-                      upscale={true}
-                      aspectRatio="4:3"
-                      autoTag={true}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                      onAIProcessed={(tags, categories) => {
-                        console.log(`🏷️ AI tags voor ${destination.name}:`, tags);
-                      }}
-                    />
-                  ) : (
-                    // Regular image for non-Cloudinary sources
-                    <DestinationImage
-                      src={destination.image || '/images/placeholder.jpg'}
-                      alt={destination.alt || destination.name || 'Bestemming'}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                    />
-                  )}
-                  
-                  {/* AI Enhancement Indicator */}
-                  {destination.aiImage ? (
-                    // Pre-processed AI indicator (best performance)
-                    <div className="absolute top-2 right-2">
-                      <div className="bg-blue-500 bg-opacity-95 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-md">
-                        <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
-                        AI Pro
+        <section className="py-4 px-5 max-w-7xl mx-auto">
+          <div className="text-center mb-6">
+            <h2 className="text-4xl md:text-6xl font-playfair font-bold mb-4 text-navy-dark tracking-wide">
+              Ontdek Polen
+            </h2>
+            <p className="text-xl md:text-2xl text-navy-medium font-croatia-body max-w-3xl mx-auto leading-relaxed">
+              Van historische steden tot adembenemende natuurparken
+            </p>
+          </div>
+          <TravelSlider
+            visibleItems={{ mobile: 1, tablet: 2, desktop: 4 }}
+            showNavigation={true}
+            className="mx-auto"
+          >
+            {publishedDestinations.map((destination: any) => {
+              const CardContent = (
+                <Card 
+                  className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl transition-all duration-500 border-0 rounded-2xl mx-2"
+                >
+                  <div className="aspect-[4/3] overflow-hidden relative">
+
+                    {/* FASE 4: Gebruik pre-processed AI images als beschikbaar, anders runtime AI */}
+                    {destination.aiImage ? (
+                      // Pre-processed AI URL - instant loading (0ms)
+                      <DestinationImage
+                        src={destination.aiImage}
+                        alt={destination.alt || destination.name || 'Bestemming'}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                      />
+                    ) : destination.image && destination.image.includes('cloudinary.com') ? (
+                      // Runtime AI processing - fallback for non-processed images
+                      <AIEnhancedImage
+                        src={destination.image}
+                        alt={destination.alt || destination.name || 'Bestemming'}
+                        aiPreset="auto"
+                        upscale={true}
+                        aspectRatio="4:3"
+                        autoTag={true}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                        onAIProcessed={(tags, categories) => {
+                          console.log(`🏷️ AI tags voor ${destination.name}:`, tags);
+                        }}
+                      />
+                    ) : (
+                      // Regular image for non-Cloudinary sources
+                      <DestinationImage
+                        src={destination.image || '/images/placeholder.jpg'}
+                        alt={destination.alt || destination.name || 'Bestemming'}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                      />
+                    )}
+                    
+                    {/* AI Enhancement Indicator */}
+                    {destination.aiImage ? (
+                      // Pre-processed AI indicator (best performance)
+                      <div className="absolute top-2 right-2">
+                        <div className="bg-blue-500 bg-opacity-95 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-md">
+                          <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
+                          AI Pro
+                        </div>
                       </div>
-                    </div>
-                  ) : destination.image && destination.image.includes('cloudinary.com') && (
-                    // Runtime AI indicator (fallback)
-                    <div className="absolute top-2 right-2">
-                      <div className="bg-green-500 bg-opacity-90 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-md">
-                        <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
-                        AI
+                    ) : destination.image && destination.image.includes('cloudinary.com') && (
+                      // Runtime AI indicator (fallback)
+                      <div className="absolute top-2 right-2">
+                        <div className="bg-green-500 bg-opacity-90 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-md">
+                          <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                          AI
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-                <div className="p-8 flex-1 flex flex-col justify-between">
-                  <div>
+                    )}
+                  </div>
+                  <div className="p-8">
                     <h3 className="font-playfair font-bold text-2xl text-navy-dark mb-3 leading-tight">
                       {destination.name}
                     </h3>
                     <p className="font-croatia-body text-navy-medium mb-6 leading-relaxed text-base">
                       {destination.description || destination.subtitle || "Ontdek deze prachtige bestemming"}
                     </p>
-                  </div>
-                  <div className="mt-auto">
                     <div className="inline-flex items-center justify-center bg-gold-accent hover:bg-gold-light text-navy-dark font-playfair font-bold px-8 py-4 rounded-full transition-all duration-300 hover:scale-105 shadow-luxury hover:shadow-gold text-lg cursor-pointer">
                       Ontdek Meer
                     </div>
                   </div>
-                </div>
-              </Card>
-            );
-          }}
-        />
+                </Card>
+              );
+
+              // OPTIMIZED: Auto-link all destinations to their optimized routes
+              // External links take precedence, then auto-generated destination links
+              if (destination.link && destination.link.startsWith('http')) {
+                // External link - open in new tab
+                return (
+                  <a
+                    key={destination.id}
+                    href={destination.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {CardContent}
+                  </a>
+                );
+              } else {
+                // Auto-link to destination slug (optimized route)
+                // This uses the new destination-first API that tries destinations before pages
+                return (
+                  <Link key={destination.id} href={`/${destination.slug}`}>
+                    {CardContent}
+                  </Link>
+                );
+              }
+            })}
+          </TravelSlider>
+        </section>
       )}
 
       {/* CTA Section - Dynamic from Database */}
@@ -543,76 +618,145 @@ export default function Home() {
         </section>
       )}
 
-      {/* Featured Activities Section - Universal Carousel */}
+      {/* Featured Activities Section - From Database */}
       {siteSettings?.showHighlights && featuredActivities.length > 0 && (
-        <div className="bg-white">
-          <UniversalCarousel
-            title="Uitgelichte Activiteiten"
-            subtitle="De beste ervaringen die Polen te bieden heeft"
-            items={featuredActivities
-              .sort((a: any, b: any) => (a.ranking || 0) - (b.ranking || 0))
-              .map((activity: any) => ({
-                ...activity,
-                image: activity.image || {
-                  'Krakow': '/images/activities/krakow-market.jpg',
-                  'Tatra': '/images/activities/tatra-mountains.jpg',
-                  'Gdansk': '/images/activities/gdansk-harbor.jpg',
-                  'Wrocław': '/images/activities/wroclaw-dwarfs.jpg',
-                  'Warschau': '/images/activities/warsaw-palace.jpg',
-                  'Zakopane': '/images/activities/zakopane-skiing.jpg',
-                  'Poznan': '/images/activities/poznan-square.jpg',
-                  'Bialowieza': '/images/activities/bialowieza-forest.jpg'
-                }[activity.location] || '/images/activities/default-activity.jpg'
-              }))
-            }
-            visibleItems={{ mobile: 1, tablet: 2, desktop: 4 }}
-            showNavigation={true}
-            renderCard={(activity) => (
-              <Card className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl transition-all duration-500 border-0 rounded-2xl mx-4 h-full flex flex-col relative hover:z-10">
-                <div className="aspect-[4/3] overflow-hidden">
-                  <ThumbnailImage
-                    src={activity.image}
-                    alt={activity.alt || activity.name || 'Activiteit'}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                    fallback="/images/activities/default-activity.jpg"
-                  />
-                </div>
-                <div className="p-8 flex-1 flex flex-col justify-between">
-                  <div>
-                    <h3 className="font-playfair font-bold text-2xl text-navy-dark mb-3 leading-tight">
-                      {activity.name}
-                    </h3>
-                    <p className="font-croatia-body text-navy-medium mb-4 leading-relaxed text-base">
-                      {activity.description || "Ontdek deze unieke activiteit"}
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-between mt-auto">
-                    <p className="font-croatia-body text-sm text-gold-accent font-bold flex items-center">
-                      <MapPin className="w-4 h-4 mr-1" />
-                      {activity.location}
-                    </p>
-                    <div className="inline-flex items-center justify-center bg-gold-accent hover:bg-gold-light text-navy-dark font-playfair font-bold px-6 py-3 rounded-full transition-all duration-300 hover:scale-105 shadow-luxury hover:shadow-gold text-sm cursor-pointer">
-                      Bekijk
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            )}
-            onItemClick={(activity) => {
-              if (activity.link && activity.link.startsWith('http')) {
-                window.open(activity.link, '_blank');
-              } else {
-                const locationToSlug: { [key: string]: string } = {
-                  'Krakow': 'krakow', 'Tatra': 'tatra', 'Gdansk': 'gdansk', 'Warschau': 'warschau',
-                  'Wroclaw': 'wroclaw', 'Zakopane': 'zakopane', 'Poznan': 'poznan', 'Bialowieza': 'bialowieza',
-                  'Wrocław': 'wroclaw', 'Poznań': 'poznan', 'Białowieża': 'bialowieza'
+        <section className="py-4 px-5 bg-white">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-6">
+              <h2 className="text-4xl md:text-6xl font-playfair font-bold mb-4 text-navy-dark tracking-wide">
+                Uitgelichte Activiteiten
+              </h2>
+              <p className="text-xl md:text-2xl text-navy-medium font-croatia-body max-w-3xl mx-auto leading-relaxed">
+                De beste ervaringen die Polen te bieden heeft
+              </p>
+            </div>
+            
+            <TravelSlider
+              visibleItems={{ mobile: 1, tablet: 2, desktop: 4 }}
+              showNavigation={true}
+              className="mx-auto"
+            >
+              {featuredActivities
+                .sort((a: any, b: any) => (a.ranking || 0) - (b.ranking || 0))
+                .map((activity: any) => {
+                  // Generate fallback image based on activity location and name
+                  const getActivityImage = (activity: any) => {
+                    const locationImages: { [key: string]: string } = {
+                      'Krakow': '/images/activities/krakow-market.jpg',
+                      'Tatra': '/images/activities/tatra-mountains.jpg',
+                      'Gdansk': '/images/activities/gdansk-harbor.jpg',
+                      'Wrocław': '/images/activities/wroclaw-dwarfs.jpg',
+                      'Warschau': '/images/activities/warsaw-palace.jpg',
+                      'Zakopane': '/images/activities/zakopane-skiing.jpg',
+                      'Poznan': '/images/activities/poznan-square.jpg',
+                      'Bialowieza': '/images/activities/bialowieza-forest.jpg'
+                    };
+                    
+                    return activity.image || locationImages[activity.location] || '/images/activities/default-activity.jpg';
+                  };
+
+                  const CardContent = (
+                    <Card className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl transition-all duration-500 border-0 rounded-2xl mx-2">
+                      <div className="aspect-[4/3] overflow-hidden">
+                        <ThumbnailImage
+                          src={getActivityImage(activity)}
+                          alt={activity.alt || activity.name || 'Activiteit'}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                          fallback="/images/activities/default-activity.jpg"
+                        />
+                      </div>
+                      <div className="p-8">
+                        <h3 className="font-playfair font-bold text-2xl text-navy-dark mb-3 leading-tight">
+                          {activity.name}
+                        </h3>
+                        <p className="font-croatia-body text-navy-medium mb-4 leading-relaxed text-base">
+                          {activity.description || "Ontdek deze unieke activiteit"}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <p className="font-croatia-body text-sm text-gold-accent font-bold flex items-center">
+                            <MapPin className="w-4 h-4 mr-1" />
+                            {activity.location}
+                          </p>
+                          <div className="inline-flex items-center justify-center bg-gold-accent hover:bg-gold-light text-navy-dark font-playfair font-bold px-6 py-3 rounded-full transition-all duration-300 hover:scale-105 shadow-luxury hover:shadow-gold text-sm cursor-pointer">
+                            Bekijk
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  );
+
+                // Handle activity click - navigate to destination page with activity parameter
+                const handleActivityClick = () => {
+                  // Create slug mapping for all supported destinations
+                  const locationToSlug: { [key: string]: string } = {
+                    'Krakow': 'krakow',
+                    'Tatra': 'tatra', 
+                    'Gdansk': 'gdansk',
+                    'Warschau': 'warschau',
+                    'Wroclaw': 'wroclaw',
+                    'Zakopane': 'zakopane',
+                    'Poznan': 'poznan',
+                    'Bialowieza': 'bialowieza',
+                    'Wrocław': 'wroclaw', // Alternative spelling
+                    'Poznań': 'poznan', // Alternative spelling  
+                    'Białowieża': 'bialowieza', // Alternative spelling
+                    'Łódź': 'lodz',
+                    'Lublin': 'lublin',
+                    'Rzeszow': 'rzeszow',
+                    'Katowice': 'katowice',
+                    'Bialystok': 'bialystok',
+                    'Jelenia Gora': 'jelenia-gora',
+                    'Karpacz': 'karpacz',
+                    'Szklarska Poreba': 'szklarska-poreba',
+                    'Malbork': 'malbork',
+                    'Torun': 'torun',
+                    'Wieliczka': 'wieliczka',
+                    'Zamosc': 'zamosc',
+                    'Sopot': 'sopot',
+                    'Ustka': 'ustka',
+                    'Swinoujscie': 'swinoujscie',
+                    'Hel': 'hel',
+                    'Zalipie': 'zalipie',
+                    'Kazimierz Dolny': 'kazimierz-dolny',
+                    'Sandomierz': 'sandomierz'
+                  };
+                  
+                  // Navigate to destination page with activity parameter
+                  const destinationSlug = locationToSlug[activity.location] || activity.location.toLowerCase();
+                  const activityUrl = `/${destinationSlug}?activity=${activity.id}`;
+                  
+                  // Use wouter navigation
+                  window.location.href = activityUrl;
                 };
-                const destinationSlug = locationToSlug[activity.location] || activity.location.toLowerCase();
-                window.location.href = `/${destinationSlug}?activity=${activity.id}`;
-              }
-            }}
-          />
-        </div>
+
+                // Handle external links
+                if (activity.link && activity.link.startsWith('http')) {
+                  return (
+                    <a
+                      key={activity.id}
+                      href={activity.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {CardContent}
+                    </a>
+                  );
+                }
+
+                // Make activity clickable - navigate to destination page
+                return (
+                  <div 
+                    key={activity.id} 
+                    onClick={handleActivityClick}
+                    className="cursor-pointer"
+                  >
+                    {CardContent}
+                  </div>
+                );
+              })}
+            </TravelSlider>
+          </div>
+        </section>
       )}
 
       {/* Published Pages */}
@@ -739,8 +883,50 @@ export default function Home() {
         </section>
       )}
 
-      {/* Universal Footer */}
-      <UniversalFooter siteName={siteSettings?.siteName || "Ontdek Polen"} />
+      {/* Footer */}
+      <footer className="bg-navy-dark text-white py-16 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-12">
+            <div>
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="h-10 w-10 bg-gold-accent rounded-full flex items-center justify-center">
+                  <span className="text-navy-dark font-playfair font-bold text-lg">P</span>
+                </div>
+                <span className="font-playfair font-semibold text-xl">
+                  {siteSettings?.siteName || 'Ontdek Polen'}
+                </span>
+              </div>
+              <p className="font-croatia-body text-white/80 leading-relaxed">
+                {siteSettings?.siteDescription || 'Jouw gids voor het ontdekken van de mooiste plekken in Polen.'}
+              </p>
+            </div>
+            
+            <div>
+              <h3 className="font-playfair font-semibold text-lg mb-6">Ontdekken</h3>
+              <ul className="space-y-3 font-croatia-body">
+                <li><Link href="/ontdek-meer" className="text-white/80 hover:text-gold-accent transition-colors">Alle Bestemmingen</Link></li>
+                <li><Link href="#" className="text-white/80 hover:text-gold-accent transition-colors">Reisgidsen</Link></li>
+                <li><Link href="#" className="text-white/80 hover:text-gold-accent transition-colors">Activiteiten</Link></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="font-playfair font-semibold text-lg mb-6">Informatie</h3>
+              <ul className="space-y-3 font-croatia-body">
+                <li><Link href="#" className="text-white/80 hover:text-gold-accent transition-colors">Over Ons</Link></li>
+                <li><Link href="#" className="text-white/80 hover:text-gold-accent transition-colors">Contact</Link></li>
+                <li><Link href="/admin" className="text-white/80 hover:text-gold-accent transition-colors">Admin</Link></li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="border-t border-white/20 mt-12 pt-8 text-center">
+            <p className="font-croatia-body text-white/60">
+              © 2025 {siteSettings?.siteName || 'Ontdek Polen'}. Alle rechten voorbehouden.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

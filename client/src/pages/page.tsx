@@ -7,14 +7,11 @@ import { Card } from "@/components/ui/card";
 import { Search, Settings, ArrowLeft, MapPin, Calendar } from "lucide-react";
 import { Link } from "wouter";
 import TravelSlider from "@/components/ui/travel-slider";
-import UniversalHero from "@/components/ui/universal-hero";
-import UniversalCarousel from "@/components/ui/universal-carousel";
-import UniversalFooter from "@/components/ui/universal-footer";
 import StructuredData from "@/components/ui/structured-data";
 import OpenGraphMeta from "@/components/ui/open-graph-meta";
 import type { SiteSettings, SearchConfig } from "@shared/schema";
 
-// Activities section component using UniversalCarousel
+// Activities section component
 function ActivitiesSection({ pageTitle, setSelectedActivityId }: { pageTitle?: string, setSelectedActivityId: (id: string | null) => void }) {
   const { data: locationActivities, isLoading } = useQuery({
     queryKey: ['/api/activities/location', pageTitle],
@@ -34,60 +31,68 @@ function ActivitiesSection({ pageTitle, setSelectedActivityId }: { pageTitle?: s
   }
 
   return (
-    <div className="bg-white">
-      <UniversalCarousel
-        title={`Activiteiten in ${pageTitle}`}
-        subtitle="Ontdek de beste ervaringen in deze bestemming"
-        items={locationActivities}
+    <section className="py-16 px-5 max-w-6xl mx-auto">
+      <h2 className="text-3xl font-bold mb-8 font-playfair text-gray-900">
+        Activiteiten in {pageTitle}
+      </h2>
+      <TravelSlider
         visibleItems={{ mobile: 1, tablet: 2, desktop: 4 }}
         showNavigation={true}
-        renderCard={(activity) => (
-          <Card className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl transition-all duration-500 border-0 rounded-2xl mx-4 h-full flex flex-col relative hover:z-10">
-            {activity.image && (
-              <div className="aspect-[4/3] overflow-hidden">
+        className="mx-auto"
+      >
+        {locationActivities.map((activity: any) => {
+          // Handler for activity click to show details in content section
+          const handleActivityClick = (e: React.MouseEvent) => {
+            e.preventDefault();
+            setSelectedActivityId(activity.id.toString());
+            
+            // Update URL with activity parameter
+            const newUrl = `${window.location.pathname}?activity=${activity.id}`;
+            window.history.pushState({}, '', newUrl);
+            
+            // Scroll to content section smoothly
+            const contentSection = document.getElementById('content-section');
+            if (contentSection) {
+              contentSection.scrollIntoView({ behavior: 'smooth' });
+            }
+          };
+
+          return (
+            <Card 
+              key={activity.id}
+              className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 border-none cursor-pointer"
+              onClick={handleActivityClick}
+            >
+              {activity.image && (
                 <img
                   src={activity.image}
                   alt={activity.alt || activity.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                  className="w-full h-40 object-cover"
                   onError={(e) => {
                     e.currentTarget.src = '/images/activities/placeholder.svg';
                   }}
                 />
-              </div>
-            )}
-            <div className="p-8 flex-1 flex flex-col justify-between">
-              <div>
-                <h3 className="font-playfair font-bold text-2xl text-navy-dark mb-3 leading-tight">
+              )}
+              <div className="p-4">
+                <h3 className="font-bold font-playfair text-gray-900 mb-2">
                   {activity.name}
                 </h3>
-                <p className="font-croatia-body text-navy-medium mb-4 leading-relaxed text-base">
-                  {activity.description || "Ontdek deze unieke activiteit"}
-                </p>
-              </div>
-              <div className="flex items-center justify-between mt-auto">
+                {activity.description && (
+                  <p className="text-sm text-gray-600 font-croatia-body line-clamp-2">
+                    {activity.description}
+                  </p>
+                )}
                 {activity.category && (
-                  <p className="font-croatia-body text-sm text-gold-accent font-bold capitalize">
+                  <p className="text-xs text-gray-500 mt-2 capitalize">
                     {activity.category}
                   </p>
                 )}
-                <div className="inline-flex items-center justify-center bg-gold-accent hover:bg-gold-light text-navy-dark font-playfair font-bold px-6 py-3 rounded-full transition-all duration-300 hover:scale-105 shadow-luxury hover:shadow-gold text-sm cursor-pointer">
-                  Bekijk Details
-                </div>
               </div>
-            </div>
-          </Card>
-        )}
-        onItemClick={(activity) => {
-          setSelectedActivityId(activity.id.toString());
-          const newUrl = `${window.location.pathname}?activity=${activity.id}`;
-          window.history.pushState({}, '', newUrl);
-          const contentSection = document.getElementById('content-section');
-          if (contentSection) {
-            contentSection.scrollIntoView({ behavior: 'smooth' });
-          }
-        }}
-      />
-    </div>
+            </Card>
+          );
+        })}
+      </TravelSlider>
+    </section>
   );
 }
 
@@ -421,37 +426,87 @@ export default function Page() {
         modifiedTime={page.updatedAt}
       />
       
-      {/* Universal Hero Section */}
-      <UniversalHero
-        backgroundImage={getBackgroundImage()}
-        title={page?.title || "Ontdek Polen"}
-        subtitle={`Mooie plekken in ${page?.title} ontdekken`}
-        showSearchBar={true}
-        searchPlaceholder={searchConfig?.placeholderText || "Zoek activiteiten in deze bestemming..."}
-        searchQuery={searchQuery}
-        onSearchChange={(value) => {
-          console.log('Destination page search input changed:', value);
-          setSearchQuery(value);
+      {/* Hero Section - WebsiteBuilder Design */}
+      <section 
+        className="relative bg-cover bg-center text-white py-24 px-5 text-center min-h-screen flex items-center justify-center"
+        style={{
+          backgroundImage: `url('${getBackgroundImage()}')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center"
         }}
-        onSearchSubmit={(e) => {
-          console.log('Destination page form submit event triggered');
-          handleSearch(e);
-        }}
-        buttons={[
-          {
-            text: "Terug naar Home",
-            onClick: () => window.location.href = "/",
-            variant: 'primary' as const,
-            icon: <ArrowLeft className="w-5 h-5" />
-          },
-          {
-            text: "Bekijk Locaties", 
-            onClick: () => {},
-            variant: 'secondary' as const,
-            icon: <MapPin className="w-5 h-5" />
-          }
-        ]}
-      />
+        role="banner"
+        aria-label={page?.headerImageAlt || `${page?.title} header afbeelding`}
+      >
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-navy-dark/40 via-navy-dark/20 to-navy-dark/60"></div>
+        
+        <div className="relative z-10 max-w-4xl mx-auto text-center">
+          <h1 className="text-5xl md:text-7xl font-playfair font-bold mb-6 text-white drop-shadow-2xl tracking-wide leading-tight">
+            {page?.title || "Ontdek Polen"}
+          </h1>
+          <p className="text-xl md:text-3xl mb-12 text-white/95 font-croatia-body drop-shadow-lg leading-relaxed font-light">
+            Mooie plekken in {page?.title} ontdekken
+          </p>
+          
+          <form 
+            onSubmit={(e) => {
+              console.log('Destination page form submit event triggered');
+              handleSearch(e);
+            }} 
+            className="mt-5 mb-5 relative"
+          >
+            <div className="relative inline-block">
+              <Input
+                type="text"
+                placeholder={searchConfig?.placeholderText || "Zoek activiteiten in deze bestemming..."}
+                value={searchQuery}
+                onChange={(e) => {
+                  console.log('Destination page search input changed:', e.target.value);
+                  setSearchQuery(e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  console.log('Destination page key pressed:', e.key);
+                  if (e.key === 'Enter') {
+                    console.log('Enter key detected, form should submit');
+                  }
+                }}
+                className="py-5 px-8 w-[28rem] max-w-full border-2 border-white/30 rounded-full text-lg text-navy-dark font-croatia-body shadow-2xl backdrop-blur-md bg-white/95 hover:bg-white hover:border-gold-accent transition-all duration-500 focus:border-gold-accent focus:ring-2 focus:ring-gold-accent/50"
+              />
+              <Search 
+                className="absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-500 h-5 w-5 cursor-pointer" 
+                onClick={() => {
+                  console.log('Destination page search icon clicked');
+                  if (searchQuery.trim()) {
+                    const form = document.querySelector('form');
+                    if (form) {
+                      form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                    }
+                  }
+                }}
+              />
+            </div>
+          </form>
+          
+          <div className="flex flex-col sm:flex-row gap-6 justify-center mt-12">
+            <Button
+              asChild
+              className="py-5 px-10 text-lg font-playfair font-medium bg-navy-dark hover:bg-navy-medium text-white rounded-full shadow-2xl hover:shadow-navy-dark/25 transition-all duration-500 border-2 border-navy-dark hover:border-navy-medium hover:scale-105"
+            >
+              <Link href="/">
+                <ArrowLeft className="w-5 h-5 mr-3" />
+                Terug naar Home
+              </Link>
+            </Button>
+            <Button
+              className="py-5 px-10 text-lg font-playfair font-medium bg-white/10 backdrop-blur-md hover:bg-white/20 border-2 border-white/40 text-white rounded-full shadow-2xl hover:shadow-white/25 transition-all duration-500 hover:scale-105"
+              variant="outline"
+            >
+              <Calendar className="w-5 h-5 mr-3" />
+              Plan je bezoek
+            </Button>
+          </div>
+        </div>
+      </section>
 
       {/* Search Results Overlay */}
       {showSearchResults && (
@@ -745,8 +800,27 @@ export default function Page() {
         </section>
       )}
 
-      {/* Universal Footer */}
-      <UniversalFooter siteName={(siteSettings as any)?.siteName || "Ontdek Polen"} />
+      {/* Footer - exact same as homepage */}
+      <footer 
+        className="text-center py-10 px-5 text-white relative"
+        style={{ backgroundColor: "#2f3e46" }}
+      >
+        {/* Admin Link */}
+        <Link href="/admin">
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="absolute top-4 right-4 text-white border-white hover:bg-white hover:text-gray-900"
+          >
+            <Settings className="h-4 w-4 mr-2" />
+            Admin
+          </Button>
+        </Link>
+        
+        <p className="font-croatia-body">
+          &copy; 2025 {(siteSettings as any)?.siteName || "Ontdek Polen"}. Alle rechten voorbehouden.
+        </p>
+      </footer>
     </div>
   );
 }
