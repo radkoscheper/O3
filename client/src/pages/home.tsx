@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, MapPin, Calendar, ArrowRight, Star, Clock, Users } from "lucide-react";
-import TravelSlider from "@/components/TravelSlider";
+import TravelSlider from "@/components/ui/travel-slider";
 import { useQuery } from "@tanstack/react-query";
 import StructuredData from "@/components/StructuredData";
 import OpenGraphMeta from "@/components/OpenGraphMeta";
