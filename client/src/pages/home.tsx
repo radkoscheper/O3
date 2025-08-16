@@ -1,295 +1,260 @@
 import { useState, useEffect } from "react";
+import { Link } from "wouter";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { Search, Settings, MapPin, Calendar } from "lucide-react";
+import { Search, MapPin, Calendar, ArrowRight, Star, Clock, Users } from "lucide-react";
+import TravelSlider from "@/components/TravelSlider";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useLocation } from "wouter";
-import TravelSlider from "@/components/ui/travel-slider";
-import { DestinationImage, ThumbnailImage, HeroImage } from "@/components/ui/optimized-image";
-import { HeroImageOptimized, DestinationImageOptimized } from "@/components/ui/optimized-image-enhanced";
-import AIEnhancedImage from "@/components/ui/ai-enhanced-image";
-import StructuredData from "@/components/ui/structured-data";
-import OpenGraphMeta from "@/components/ui/open-graph-meta";
-import { useSEO } from "@/hooks/use-seo";
-import { usePerformanceMonitoring, useConnectionMonitoring } from "@/hooks/use-performance";
-import { usePerformanceOptimizations } from "@/hooks/use-performance-optimization";
-import { trackSearch, trackHomepageInteraction, trackDestinationView, trackGuideView } from "../../lib/analytics";
-import type { SiteSettings, SearchConfig, SelectMotivation, Activity } from "@shared/schema";
+import StructuredData from "@/components/StructuredData";
+import OpenGraphMeta from "@/components/OpenGraphMeta";
+
+interface Destination {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  image: string;
+  alt: string;
+  region?: string;
+  highlights?: string[];
+}
+
+interface Guide {
+  id: number;
+  title: string;
+  description: string;
+  image: string;
+  alt: string;
+  link?: string;
+}
+
+interface Page {
+  id: number;
+  title: string;
+  slug: string;
+  metaDescription: string;
+  featured: boolean;
+  template: string;
+  createdAt: string;
+}
+
+interface Activity {
+  id: number;
+  name: string;
+  location: string;
+  description: string;
+  image: string;
+  alt: string;
+  category: string;
+}
+
+interface SiteSettings {
+  id: number;
+  siteName: string;
+  siteDescription: string;
+  backgroundImage?: string;
+  backgroundImageAlt?: string;
+  showDestinations?: boolean;
+  showGuides?: boolean;
+  showActivities?: boolean;
+  showPages?: boolean;
+  socialMediaImage?: string;
+  metaKeywords?: string;
+}
+
+interface SearchConfig {
+  id: number;
+  placeholderText: string;
+  scope: string;
+  showCategories: boolean;
+}
+
+interface MotivationSection {
+  id: number;
+  title: string;
+  subtitle: string;
+  description: string;
+  buttonText: string;
+  buttonLink: string;
+  isActive: boolean;
+}
 
 export default function Home() {
-  const [location] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  
-  // Hooks must be called in consistent order
-  useSEO();
-  usePerformanceMonitoring();
-  useConnectionMonitoring();
-  usePerformanceOptimizations();
-  
-  // Close search handler that preserves ability to re-search
-  const closeSearch = () => {
-    console.log('Closing search overlay');
-    setShowSearchResults(false);
-    setIsSearching(false);
-    // Keep searchQuery and searchResults so user can re-open same search
+
+  const { data: siteSettings } = useQuery<SiteSettings>({
+    queryKey: ['/api/site-settings']
+  });
+
+  const { data: searchConfig } = useQuery<SearchConfig>({
+    queryKey: ['/api/search-configs']
+  });
+
+  const { data: publishedDestinations = [] } = useQuery<Destination[]>({
+    queryKey: ['/api/destinations/homepage']
+  });
+
+  const { data: publishedGuides = [] } = useQuery<Guide[]>({
+    queryKey: ['/api/guides/homepage']
+  });
+
+  const { data: publishedPages = [] } = useQuery<Page[]>({
+    queryKey: ['/api/pages']
+  });
+
+  const { data: publishedActivities = [] } = useQuery<Activity[]>({
+    queryKey: ['/api/activities']
+  });
+
+  const { data: motivation } = useQuery<MotivationSection>({
+    queryKey: ['/api/motivation']
+  });
+
+  const { data: motivationImageLocation } = useQuery<{locationName: string}>({
+    queryKey: ['/api/motivation/image-location']
+  });
+
+  // Homepage analytics tracking functions
+  const trackHomepageView = () => {
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'page_view', {
+        page_title: 'Homepage',
+        page_location: window.location.href,
+        custom_parameter: 'homepage_load'
+      });
+    }
   };
 
-  // Helper function to get type-specific styling for search results
+  const trackHomepageInteraction = (action: string, element: string) => {
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'homepage_interaction', {
+        action: action,
+        element: element,
+        page_location: window.location.href
+      });
+    }
+  };
+
+  const trackDestinationView = (destinationName: string, source: string = 'homepage') => {
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'destination_view', {
+        destination_name: destinationName,
+        source: source,
+        page_location: window.location.href
+      });
+    }
+  };
+
+  const trackGuideView = (guideTitle: string, source: string = 'homepage') => {
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'guide_view', {
+        guide_title: guideTitle,
+        source: source,
+        page_location: window.location.href
+      });
+    }
+  };
+
+  const trackSearchPerformed = (query: string, resultsCount: number) => {
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'search', {
+        search_term: query,
+        results_count: resultsCount,
+        page_location: window.location.href
+      });
+    }
+  };
+
+  useEffect(() => {
+    trackHomepageView();
+  }, []);
+
+  // Dynamic SEO title based on current page
+  useEffect(() => {
+    const title = `${siteSettings?.siteName || 'Ontdek Polen'}`;
+    document.title = title;
+    console.log('🔍 Updating dynamic SEO tags for:', '/', title);
+  }, [siteSettings]);
+
+  const performSearch = async (query: string) => {
+    if (!query.trim()) return;
+    
+    setIsSearching(true);
+    try {
+      const scope = searchConfig?.scope || 'homepage';
+      const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&scope=${scope}`);
+      const results = await response.json();
+      
+      setSearchResults(results);
+      trackSearchPerformed(query, results.length);
+    } catch (error) {
+      console.error('Search failed:', error);
+      setSearchResults([]);
+      trackSearchPerformed(query, 0);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      console.log('Search submitted:', searchQuery);
+      performSearch(searchQuery);
+      setShowSearchResults(true);
+      trackHomepageInteraction('search_submitted', 'search_form');
+    }
+  };
+
+  const closeSearch = () => {
+    setShowSearchResults(false);
+    setSearchResults([]);
+    trackHomepageInteraction('search_closed', 'search_overlay');
+  };
+
   const getTypeStyles = (type: string) => {
     switch (type) {
       case 'destination':
-        return 'bg-green-100 text-green-700';
-      case 'activity':
-        return 'bg-green-100 text-green-700';
-      case 'highlight':
-        return 'bg-yellow-100 text-yellow-700';
+        return 'bg-blue-100 text-blue-800';
       case 'guide':
-        return 'bg-blue-100 text-blue-700';
+        return 'bg-green-100 text-green-800';
       case 'page':
-        return 'bg-purple-100 text-purple-700';
-      case 'template':
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-purple-100 text-purple-800';
+      case 'activity':
+        return 'bg-orange-100 text-orange-800';
       default:
-        return 'bg-blue-100 text-blue-600';
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
-  // Helper function to get user-friendly type labels
   const getTypeLabel = (type: string) => {
     switch (type) {
       case 'destination':
-        return '🏔️ Bestemmingen';
-      case 'activity':
-        return '🎯 Activiteiten';
-      case 'highlight':
-        return '✨ Hoogtepunten';
+        return 'Bestemming';
       case 'guide':
-        return '📖 Reizen';
+        return 'Gids';
       case 'page':
-        return '📄 Pagina';
-      case 'template':
-        return '🎨 Template';
+        return 'Pagina';
+      case 'activity':
+        return 'Activiteit';
       default:
-        return type;
-    }
-  };
-  
-  // Fetch destinations and guides from API (homepage specific)
-  const { data: destinations = [], isLoading: destinationsLoading } = useQuery({
-    queryKey: ["/api/destinations/homepage"],
-  });
-  
-  const { data: guides = [], isLoading: guidesLoading } = useQuery({
-    queryKey: ["/api/guides/homepage"],
-  });
-
-  const { data: pages = [], isLoading: pagesLoading } = useQuery({
-    queryKey: ["/api/pages"],
-  });
-
-  // Fetch featured activities from database (replaces old highlights)
-  const { data: featuredActivities = [], isLoading: featuredLoading } = useQuery({
-    queryKey: ["/api/activities"],
-    queryFn: async () => {
-      const response = await fetch('/api/activities');
-      if (!response.ok) {
-        throw new Error('Failed to fetch activities');
-      }
-      const activities = await response.json();
-      // Filter for featured and published activities only
-      return activities.filter((activity: any) => activity.featured === true && activity.published === true);
-    },
-  });
-
-  // Fetch site settings
-  const { data: siteSettings, isLoading: settingsLoading } = useQuery<SiteSettings>({
-    queryKey: ["/api/site-settings"],
-  });
-
-  // Fetch search configuration for homepage context
-  const { data: searchConfig } = useQuery({
-    queryKey: ["/api/search-configs"],
-    queryFn: async () => {
-      const response = await fetch('/api/search-configs');
-      if (!response.ok) throw new Error('Failed to fetch search configs');
-      const configs = await response.json();
-      return configs.find((config: any) => config.context === 'homepage' && config.enabled);
-    },
-  });
-
-  // Fetch motivation data for CTA section
-  const { data: motivationData } = useQuery<SelectMotivation>({
-    queryKey: ["/api/motivation"],
-  });
-
-  // Fetch motivation image location name
-  const { data: motivationImageLocation } = useQuery({
-    queryKey: ["/api/motivation/image-location", motivationData?.image],
-    queryFn: async () => {
-      if (!motivationData?.image) return null;
-      const response = await fetch(`/api/motivation/image-location?imagePath=${encodeURIComponent(motivationData.image)}`);
-      if (!response.ok) throw new Error('Failed to fetch location');
-      return response.json();
-    },
-    enabled: !!motivationData?.image,
-  });
-
-  // Update document title and meta tags when site settings change
-  useEffect(() => {
-    if (siteSettings) {
-      document.title = siteSettings.siteName || "Ontdek Polen";
-      
-      // Update meta description
-      let metaDescription = document.querySelector('meta[name="description"]');
-      if (!metaDescription) {
-        metaDescription = document.createElement('meta');
-        metaDescription.setAttribute('name', 'description');
-        document.head.appendChild(metaDescription);
-      }
-      metaDescription.setAttribute('content', siteSettings.siteDescription || "Ontdek de mooiste plekken van Polen");
-      
-      // Update meta keywords
-      let metaKeywords = document.querySelector('meta[name="keywords"]');
-      if (!metaKeywords) {
-        metaKeywords = document.createElement('meta');
-        metaKeywords.setAttribute('name', 'keywords');
-        document.head.appendChild(metaKeywords);
-      }
-      metaKeywords.setAttribute('content', siteSettings.metaKeywords || "Polen, reizen, vakantie, bestemmingen");
-      
-      // Update favicon - handle enabled/disabled state
-      const existingFavicon = document.querySelector('link[rel="icon"]');
-      
-      if (siteSettings.faviconEnabled === true && siteSettings.favicon) {
-        // Favicon enabled and has path - use server route which checks database
-        if (existingFavicon) {
-          existingFavicon.setAttribute('href', '/favicon.ico?' + Date.now()); // Cache bust
-        } else {
-          const newFavicon = document.createElement('link');
-          newFavicon.setAttribute('rel', 'icon');
-          newFavicon.setAttribute('href', '/favicon.ico?' + Date.now()); // Cache bust
-          document.head.appendChild(newFavicon);
-        }
-      } else {
-        // Favicon disabled - remove any existing favicon
-        if (existingFavicon) {
-          existingFavicon.remove();
-        }
-        // Force browser to not show any favicon by using empty data URL
-        const emptyFavicon = document.createElement('link');
-        emptyFavicon.setAttribute('rel', 'icon');
-        emptyFavicon.setAttribute('href', 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=');
-        document.head.appendChild(emptyFavicon);
-      }
-      
-      // Add custom CSS
-      if (siteSettings.customCSS) {
-        let customStyle = document.querySelector('#custom-site-css');
-        if (!customStyle) {
-          customStyle = document.createElement('style');
-          customStyle.id = 'custom-site-css';
-          document.head.appendChild(customStyle);
-        }
-        customStyle.textContent = siteSettings.customCSS;
-      }
-      
-      // Add custom JavaScript
-      if (siteSettings.customJS) {
-        let customScript = document.querySelector('#custom-site-js');
-        if (!customScript) {
-          customScript = document.createElement('script');
-          customScript.id = 'custom-site-js';
-          document.head.appendChild(customScript);
-        }
-        customScript.textContent = siteSettings.customJS;
-      }
-      
-      // Add Google Analytics
-      if (siteSettings.googleAnalyticsId) {
-        let gaScript = document.querySelector('#google-analytics') as HTMLScriptElement;
-        if (!gaScript) {
-          gaScript = document.createElement('script') as HTMLScriptElement;
-          gaScript.id = 'google-analytics';
-          gaScript.async = true;
-          gaScript.src = `https://www.googletagmanager.com/gtag/js?id=${siteSettings.googleAnalyticsId}`;
-          document.head.appendChild(gaScript);
-          
-          const gaConfig = document.createElement('script');
-          gaConfig.textContent = `
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', '${siteSettings.googleAnalyticsId}');
-          `;
-          document.head.appendChild(gaConfig);
-        }
-      }
-    }
-  }, [siteSettings]);
-
-  // Filter only published destinations
-  const publishedDestinations = (destinations as any[]).filter((destination: any) => destination.published);
-  
-  // Filter only published guides
-  const publishedGuides = (guides as any[]).filter((guide: any) => guide.published);
-  
-  // Filter only published pages
-  const publishedPages = (pages as any[]).filter((page: any) => page.published);
-  
-  // Loading states are handled by global LoadingScreen in App.tsx
-
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-    
-    // Track search analytics
-    trackSearch(searchQuery, 'homepage');
-    
-    console.log('=== SEARCH DEBUG ===');
-    console.log('Starting search for:', searchQuery);
-    console.log('Current showSearchResults:', showSearchResults);
-    console.log('Current searchResults length:', searchResults.length);
-    console.log('Current isSearching:', isSearching);
-    
-    // Always perform fresh search - don't cache results
-    setIsSearching(true);
-    setShowSearchResults(true);
-    
-    try {
-      const searchScope = searchConfig?.searchScope || 'destinations';
-      const url = `/api/search?q=${encodeURIComponent(searchQuery)}&scope=${searchScope}`;
-      console.log('Fetching URL:', url);
-      
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      console.log('API Response:', data);
-      console.log('Results count:', data.results?.length || 0);
-      
-      setSearchResults(data.results || []);
-    } catch (error) {
-      console.error('Search error:', error);
-      setSearchResults([]);
-    } finally {
-      setIsSearching(false);
-      console.log('=== SEARCH COMPLETE ===');
+        return 'Onbekend';
     }
   };
 
   const handlePlanTrip = () => {
-    console.log("Planning trip...");
-    // TODO: Implement trip planning logic
+    console.log('Plan trip clicked');
+    trackHomepageInteraction('plan_trip_clicked', 'hero_button');
+    // TODO: Implement trip planning functionality
   };
 
   const handleReadGuides = () => {
-    console.log("Reading guides...");
+    console.log('Read guides clicked');
+    trackHomepageInteraction('read_guides_clicked', 'hero_button');
     // TODO: Implement guide reading functionality
   };
 
@@ -315,9 +280,9 @@ export default function Home() {
         type="website"
         siteName={siteSettings?.siteName || "Ontdek Polen"}
       />
-      {/* Hero Section - Restored Original Layout */}
+      {/* Hero Section - Croatia.com Inspired Optimization */}
       <section 
-        className="relative text-white py-24 px-5 text-center min-h-screen flex items-center justify-center overflow-hidden"
+        className="relative text-white py-12 md:py-16 px-4 md:px-5 text-center h-[50vh] md:h-[70vh] flex items-center justify-center"
         style={{
           backgroundImage: siteSettings?.backgroundImage 
             ? `url('${siteSettings.backgroundImage}')` 
@@ -330,11 +295,11 @@ export default function Home() {
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-navy-dark/40 via-navy-dark/20 to-navy-dark/60 z-10"></div>
         
-        <div className="relative z-20 max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl md:text-7xl font-playfair font-bold mb-6 text-white drop-shadow-2xl tracking-wide leading-tight">
+        <div className="relative z-20 max-w-3xl mx-auto text-center">
+          <h1 className="text-3xl md:text-6xl font-playfair font-bold mb-3 md:mb-4 text-white leading-tight">
             {siteSettings?.siteName || "Ontdek Polen"}
           </h1>
-          <p className="text-xl md:text-3xl mb-12 text-white/95 font-croatia-body drop-shadow-lg leading-relaxed font-light">
+          <p className="text-base md:text-xl mb-6 md:mb-8 text-white font-croatia-body leading-relaxed px-2">
             {siteSettings?.siteDescription || "Van historische steden tot adembenemende natuurparken"}
           </p>
           
@@ -343,9 +308,9 @@ export default function Home() {
               console.log('Form submit event triggered');
               handleSearch(e);
             }} 
-            className="mt-5 mb-5 relative"
+            className="mt-4 md:mt-6 mb-4 md:mb-6 relative"
           >
-            <div className="relative inline-block">
+            <div className="relative inline-block w-full max-w-md mx-auto">
               <Input
                 type="text"
                 placeholder={searchConfig?.placeholderText || "Zoek je perfecte bestemming in Polen..."}
@@ -360,7 +325,7 @@ export default function Home() {
                     console.log('Enter key detected, form should submit');
                   }
                 }}
-                className="py-5 px-8 w-[28rem] max-w-full border-2 border-white/30 rounded-full text-lg text-navy-dark font-croatia-body shadow-2xl backdrop-blur-md bg-white/95 hover:bg-white hover:border-gold-accent transition-all duration-500 focus:border-gold-accent focus:ring-2 focus:ring-gold-accent/50"
+                className="py-3 md:py-4 px-4 md:px-6 w-full border border-white/20 rounded-full text-sm md:text-base text-navy-dark font-croatia-body bg-white/90 hover:bg-white transition-all duration-300 focus:border-gold-accent focus:ring-1 focus:ring-gold-accent/30"
               />
               <Search 
                 className="absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-500 h-5 w-5 cursor-pointer" 
@@ -377,20 +342,20 @@ export default function Home() {
             </div>
           </form>
           
-          <div className="flex flex-col sm:flex-row gap-6 justify-center mt-12">
+          <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center mt-6 md:mt-12 px-4">
             <Button
               onClick={handlePlanTrip}
-              className="py-5 px-10 text-lg font-playfair font-medium bg-navy-dark hover:bg-navy-medium text-white rounded-full shadow-2xl hover:shadow-navy-dark/25 transition-all duration-500 border-2 border-navy-dark hover:border-navy-medium hover:scale-105"
+              className="py-4 md:py-5 px-8 md:px-10 text-base md:text-lg font-playfair font-medium bg-navy-dark hover:bg-navy-medium text-white rounded-full transition-all duration-500 border-2 border-navy-dark hover:border-navy-medium hover:scale-105"
             >
-              <MapPin className="w-5 h-5 mr-3" />
+              <MapPin className="w-4 md:w-5 h-4 md:h-5 mr-2 md:mr-3" />
               Plan je reis
             </Button>
             <Button
               onClick={handleReadGuides}
-              className="py-5 px-10 text-lg font-playfair font-medium bg-white/10 backdrop-blur-md hover:bg-white/20 border-2 border-white/40 text-white rounded-full shadow-2xl hover:shadow-white/25 transition-all duration-500 hover:scale-105"
+              className="py-4 md:py-5 px-8 md:px-10 text-base md:text-lg font-playfair font-medium bg-white/10 hover:bg-white/20 border-2 border-white/40 text-white rounded-full transition-all duration-500 hover:scale-105"
               variant="outline"
             >
-              <Calendar className="w-5 h-5 mr-3" />
+              <Calendar className="w-4 md:w-5 h-4 md:h-5 mr-2 md:mr-3" />
               Lees onze gidsen
             </Button>
           </div>
@@ -426,352 +391,237 @@ export default function Home() {
               </div>
             ) : searchResults.length > 0 ? (
               <div className="space-y-3">
-                {searchResults.map((result: any) => (
-                  <Link key={result.id} href={result.link || `/${result.slug}`}>
-                    <div className="p-4 hover:bg-gray-50 rounded-lg cursor-pointer border border-gray-200 transition-all duration-200">
-                      <div className="flex items-center space-x-4">
-                        {result.image && (
-                          <img 
-                            src={result.image} 
-                            alt={result.alt || result.name} 
-                            className="w-16 h-16 object-cover rounded-lg"
-                          />
+                {searchResults.map((result: any, index: number) => (
+                  <Link 
+                    key={`${result.type}-${result.id || index}`} 
+                    href={result.url || `/${result.slug || result.id}`}
+                    className="block p-3 rounded-lg hover:bg-gray-50 border border-gray-100"
+                    onClick={() => {
+                      console.log('Search result clicked:', result);
+                      if (result.type === 'destination') {
+                        trackDestinationView(result.name || result.title, 'search');
+                      } else if (result.type === 'guide') {
+                        trackGuideView(result.title, 'search');
+                      }
+                      trackHomepageInteraction('search_result_click', result.type);
+                      closeSearch();
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900 font-playfair">{result.title || result.name}</h4>
+                        {result.excerpt && (
+                          <p className="text-sm text-gray-600 mt-1 font-croatia-body">{result.excerpt}</p>
                         )}
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900 mb-1 font-playfair">{result.name || result.title}</h4>
-                          <p className="text-sm text-gray-600 mb-2 font-croatia-body">{result.description}</p>
-                          <span className={`text-xs px-2 py-1 rounded capitalize ${getTypeStyles(result.type)}`}>
-                            {getTypeLabel(result.type)}
-                          </span>
-                        </div>
                       </div>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ml-3 ${getTypeStyles(result.type)}`}>
+                        {getTypeLabel(result.type)}
+                      </span>
                     </div>
                   </Link>
                 ))}
               </div>
             ) : (
               <div className="text-center py-8">
-                <p className="text-gray-600 font-croatia-body">
-                  Geen resultaten gevonden voor "{searchQuery}"
-                </p>
-                <p className="text-sm text-gray-500 mt-2 font-croatia-body">
-                  Probeer een andere zoekterm
-                </p>
+                <p className="text-gray-600 font-croatia-body">Geen resultaten gevonden voor "{searchQuery}"</p>
+                <p className="text-sm text-gray-500 mt-2 font-croatia-body">Probeer een andere zoekterm</p>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* Destinations Section - Luxury Layout */}
+      {/* Destinations Section - Luxury WebsiteBuilder Design */}
       {siteSettings?.showDestinations && (
-        <section className="py-4 px-5 max-w-7xl mx-auto">
-          <div className="text-center mb-6">
-            <h2 className="text-4xl md:text-6xl font-playfair font-bold mb-4 text-navy-dark tracking-wide">
-              Ontdek Polen
-            </h2>
-            <p className="text-xl md:text-2xl text-navy-medium font-croatia-body max-w-3xl mx-auto leading-relaxed">
-              Van historische steden tot adembenemende natuurparken
-            </p>
-          </div>
-          <TravelSlider
-            visibleItems={{ mobile: 1, tablet: 2, desktop: 4 }}
-            showNavigation={true}
-            className="mx-auto"
-          >
-            {publishedDestinations.map((destination: any) => {
-              const CardContent = (
-                <Card 
-                  className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl transition-all duration-500 border-0 rounded-2xl mx-2"
-                >
-                  <div className="aspect-[4/3] overflow-hidden relative">
-
-                    {/* FASE 4: Gebruik pre-processed AI images als beschikbaar, anders runtime AI */}
-                    {destination.aiImage ? (
-                      // Pre-processed AI URL - instant loading (0ms)
-                      <DestinationImage
-                        src={destination.aiImage}
-                        alt={destination.alt || destination.name || 'Bestemming'}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                      />
-                    ) : destination.image && destination.image.includes('cloudinary.com') ? (
-                      // Runtime AI processing - fallback for non-processed images
-                      <AIEnhancedImage
-                        src={destination.image}
-                        alt={destination.alt || destination.name || 'Bestemming'}
-                        aiPreset="auto"
-                        upscale={true}
-                        aspectRatio="4:3"
-                        autoTag={true}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                        onAIProcessed={(tags, categories) => {
-                          console.log(`🏷️ AI tags voor ${destination.name}:`, tags);
-                        }}
-                      />
-                    ) : (
-                      // Regular image for non-Cloudinary sources
-                      <DestinationImage
-                        src={destination.image || '/images/placeholder.jpg'}
-                        alt={destination.alt || destination.name || 'Bestemming'}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                      />
-                    )}
-                    
-                    {/* AI Enhancement Indicator */}
-                    {destination.aiImage ? (
-                      // Pre-processed AI indicator (best performance)
-                      <div className="absolute top-2 right-2">
-                        <div className="bg-blue-500 bg-opacity-95 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-md">
-                          <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
-                          AI Pro
-                        </div>
-                      </div>
-                    ) : destination.image && destination.image.includes('cloudinary.com') && (
-                      // Runtime AI indicator (fallback)
-                      <div className="absolute top-2 right-2">
-                        <div className="bg-green-500 bg-opacity-90 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-md">
-                          <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
-                          AI
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-8">
-                    <h3 className="font-playfair font-bold text-2xl text-navy-dark mb-3 leading-tight">
-                      {destination.name}
-                    </h3>
-                    <p className="font-croatia-body text-navy-medium mb-6 leading-relaxed text-base">
-                      {destination.description || destination.subtitle || "Ontdek deze prachtige bestemming"}
-                    </p>
-                    <div className="inline-flex items-center justify-center bg-gold-accent hover:bg-gold-light text-navy-dark font-playfair font-bold px-8 py-4 rounded-full transition-all duration-300 hover:scale-105 shadow-luxury hover:shadow-gold text-lg cursor-pointer">
-                      Ontdek Meer
-                    </div>
-                  </div>
-                </Card>
-              );
-
-              // OPTIMIZED: Auto-link all destinations to their optimized routes
-              // External links take precedence, then auto-generated destination links
-              if (destination.link && destination.link.startsWith('http')) {
-                // External link - open in new tab
-                return (
-                  <a
-                    key={destination.id}
-                    href={destination.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {CardContent}
-                  </a>
-                );
-              } else {
-                // Auto-link to destination slug (optimized route)
-                // This uses the new destination-first API that tries destinations before pages
-                return (
-                  <Link key={destination.id} href={`/${destination.slug}`}>
-                    {CardContent}
-                  </Link>
-                );
-              }
-            })}
-          </TravelSlider>
-        </section>
-      )}
-
-      {/* CTA Section - Dynamic from Database */}
-      {siteSettings?.showMotivation && motivationData && motivationData?.isPublished && (
-        <section className="py-20 px-5 max-w-7xl mx-auto">
-          <div className="glass-card rounded-2xl p-8 md:p-12 shadow-2xl border-gold/20">
-            <div className="flex flex-wrap gap-12 items-center justify-between">
-              <div className="flex-1 min-w-80">
-                <h2 className="text-4xl md:text-5xl font-playfair font-bold mb-6 text-navy-dark">
-                  {motivationData?.title || "Laat je verrassen door het onbekende Polen"}
-                </h2>
-                <p className="text-lg md:text-xl mb-8 font-croatia-body text-navy-medium leading-relaxed">
-                  {motivationData?.description || "Bezoek historische steden, ontdek natuurparken en verborgen parels. Onze reisgidsen helpen je op weg!"}
-                </p>
-                <Button
-                  onClick={handleReadGuides}
-                  className="bg-navy-gradient hover:opacity-90 text-white py-4 px-8 text-lg font-croatia-body rounded-xl shadow-xl transition-all duration-300 transform hover:scale-105"
-                >
-                  <Calendar className="mr-2 h-5 w-5" />
-                  {motivationData?.buttonText || "Lees onze reizen"}
-                </Button>
-              </div>
-              <div className="flex-1 min-w-80 relative">
-                <HeroImage
-                  src={motivationData?.image || "/images/motivatie/tatra-valley.jpg"}
-                  alt="Motivatie afbeelding"
-                  className="w-full rounded-xl shadow-2xl"
-                  fallback="/images/motivatie/tatra-valley.jpg"
-                />
-                {/* Location name overlay */}
-                {motivationImageLocation?.locationName && (
-                  <div className="absolute bottom-4 right-4 glass-card text-navy-dark px-3 py-2 rounded-lg text-sm font-medium shadow-xl border-gold/30">
-                    <MapPin className="inline mr-1 h-4 w-4 text-gold" />
-                    {motivationImageLocation.locationName}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Featured Activities Section - From Database */}
-      {siteSettings?.showHighlights && featuredActivities.length > 0 && (
         <section className="py-4 px-5 bg-white">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-6">
               <h2 className="text-4xl md:text-6xl font-playfair font-bold mb-4 text-navy-dark tracking-wide">
-                Uitgelichte Activiteiten
+                Populaire Bestemmingen
               </h2>
               <p className="text-xl md:text-2xl text-navy-medium font-croatia-body max-w-3xl mx-auto leading-relaxed">
-                De beste ervaringen die Polen te bieden heeft
+                Ontdek de verborgen schatten van Polen
               </p>
             </div>
             
             <TravelSlider
-              visibleItems={{ mobile: 1, tablet: 2, desktop: 4 }}
+              visibleItems={{ mobile: 1, tablet: 2, desktop: 3 }}
               showNavigation={true}
               className="mx-auto"
             >
-              {featuredActivities
-                .sort((a: any, b: any) => (a.ranking || 0) - (b.ranking || 0))
-                .map((activity: any) => {
-                  // Generate fallback image based on activity location and name
-                  const getActivityImage = (activity: any) => {
-                    const locationImages: { [key: string]: string } = {
-                      'Krakow': '/images/activities/krakow-market.jpg',
-                      'Tatra': '/images/activities/tatra-mountains.jpg',
-                      'Gdansk': '/images/activities/gdansk-harbor.jpg',
-                      'Wrocław': '/images/activities/wroclaw-dwarfs.jpg',
-                      'Warschau': '/images/activities/warsaw-palace.jpg',
-                      'Zakopane': '/images/activities/zakopane-skiing.jpg',
-                      'Poznan': '/images/activities/poznan-square.jpg',
-                      'Bialowieza': '/images/activities/bialowieza-forest.jpg'
-                    };
-                    
-                    return activity.image || locationImages[activity.location] || '/images/activities/default-activity.jpg';
-                  };
-
-                  const CardContent = (
-                    <Card className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl transition-all duration-500 border-0 rounded-2xl mx-2">
-                      <div className="aspect-[4/3] overflow-hidden">
-                        <ThumbnailImage
-                          src={getActivityImage(activity)}
-                          alt={activity.alt || activity.name || 'Activiteit'}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                          fallback="/images/activities/default-activity.jpg"
-                        />
-                      </div>
-                      <div className="p-8">
-                        <h3 className="font-playfair font-bold text-2xl text-navy-dark mb-3 leading-tight">
-                          {activity.name}
+              {publishedDestinations.map((destination) => {
+                const CardContent = (
+                  <Card className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl transition-all duration-500 border-0 rounded-2xl mx-2">
+                    <div className="aspect-[4/3] overflow-hidden">
+                      <img
+                        src={destination.image}
+                        alt={destination.alt}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                      />
+                    </div>
+                    <div className="p-8">
+                      <div className="flex items-start justify-between mb-3">
+                        <h3 className="font-playfair font-bold text-2xl text-navy-dark leading-tight">
+                          {destination.name}
                         </h3>
-                        <p className="font-croatia-body text-navy-medium mb-4 leading-relaxed text-base">
-                          {activity.description || "Ontdek deze unieke activiteit"}
-                        </p>
-                        <div className="flex items-center justify-between">
-                          <p className="font-croatia-body text-sm text-gold-accent font-bold flex items-center">
-                            <MapPin className="w-4 h-4 mr-1" />
-                            {activity.location}
-                          </p>
-                          <div className="inline-flex items-center justify-center bg-gold-accent hover:bg-gold-light text-navy-dark font-playfair font-bold px-6 py-3 rounded-full transition-all duration-300 hover:scale-105 shadow-luxury hover:shadow-gold text-sm cursor-pointer">
-                            Bekijk
-                          </div>
-                        </div>
+                        {destination.region && (
+                          <span className="bg-gold-accent/20 text-gold-dark px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap ml-2">
+                            {destination.region}
+                          </span>
+                        )}
                       </div>
-                    </Card>
-                  );
+                      <p className="font-croatia-body text-navy-medium mb-6 leading-relaxed text-base">
+                        {destination.description}
+                      </p>
+                      {destination.highlights && (
+                        <div className="flex flex-wrap gap-2 mb-6">
+                          {destination.highlights.slice(0, 3).map((highlight, index) => (
+                            <span key={index} className="bg-navy-light/10 text-navy-dark px-2 py-1 rounded text-xs font-medium">
+                              {highlight}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <div className="inline-flex items-center justify-center bg-gold-accent hover:bg-gold-light text-navy-dark font-playfair font-bold px-6 py-3 rounded-full transition-all duration-300 hover:scale-105 shadow-luxury hover:shadow-gold text-base cursor-pointer">
+                        Ontdek Meer <ArrowRight className="w-4 h-4 ml-2" />
+                      </div>
+                    </div>
+                  </Card>
+                );
 
-                // Handle activity click - navigate to destination page with activity parameter
-                const handleActivityClick = () => {
-                  // Create slug mapping for all supported destinations
-                  const locationToSlug: { [key: string]: string } = {
-                    'Krakow': 'krakow',
-                    'Tatra': 'tatra', 
-                    'Gdansk': 'gdansk',
-                    'Warschau': 'warschau',
-                    'Wroclaw': 'wroclaw',
-                    'Zakopane': 'zakopane',
-                    'Poznan': 'poznan',
-                    'Bialowieza': 'bialowieza',
-                    'Wrocław': 'wroclaw', // Alternative spelling
-                    'Poznań': 'poznan', // Alternative spelling  
-                    'Białowieża': 'bialowieza', // Alternative spelling
-                    'Łódź': 'lodz',
-                    'Lublin': 'lublin',
-                    'Rzeszow': 'rzeszow',
-                    'Katowice': 'katowice',
-                    'Bialystok': 'bialystok',
-                    'Jelenia Gora': 'jelenia-gora',
-                    'Karpacz': 'karpacz',
-                    'Szklarska Poreba': 'szklarska-poreba',
-                    'Malbork': 'malbork',
-                    'Torun': 'torun',
-                    'Wieliczka': 'wieliczka',
-                    'Zamosc': 'zamosc',
-                    'Sopot': 'sopot',
-                    'Ustka': 'ustka',
-                    'Swinoujscie': 'swinoujscie',
-                    'Hel': 'hel',
-                    'Zalipie': 'zalipie',
-                    'Kazimierz Dolny': 'kazimierz-dolny',
-                    'Sandomierz': 'sandomierz'
-                  };
-                  
-                  // Navigate to destination page with activity parameter
-                  const destinationSlug = locationToSlug[activity.location] || activity.location.toLowerCase();
-                  const activityUrl = `/${destinationSlug}?activity=${activity.id}`;
-                  
-                  // Use wouter navigation
-                  window.location.href = activityUrl;
-                };
-
-                // Handle external links
-                if (activity.link && activity.link.startsWith('http')) {
-                  return (
-                    <a
-                      key={activity.id}
-                      href={activity.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {CardContent}
-                    </a>
-                  );
-                }
-
-                // Make activity clickable - navigate to destination page
                 return (
-                  <div 
-                    key={activity.id} 
-                    onClick={handleActivityClick}
-                    className="cursor-pointer"
+                  <Link 
+                    key={destination.id} 
+                    href={`/${destination.slug}`}
+                    onClick={() => {
+                      trackDestinationView(destination.name, 'homepage');
+                      trackHomepageInteraction('destination_clicked', 'destination_card');
+                    }}
                   >
                     {CardContent}
-                  </div>
+                  </Link>
                 );
               })}
+            </TravelSlider>
+
+            <div className="text-center mt-12">
+              <Link href="/ontdek-meer">
+                <Button 
+                  className="bg-navy-dark hover:bg-navy-medium text-white font-playfair font-bold px-8 py-4 rounded-full text-lg transition-all duration-300 hover:scale-105 shadow-luxury hover:shadow-navy-dark/25"
+                  onClick={() => trackHomepageInteraction('view_all_destinations', 'destinations_section')}
+                >
+                  Bekijk Alle Bestemmingen
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Activities Section - Luxury WebsiteBuilder Design */}
+      {siteSettings?.showActivities && (
+        <section className="py-4 px-5" style={{ backgroundColor: "#f8f6f1" }}>
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-6">
+              <h2 className="text-4xl md:text-6xl font-playfair font-bold mb-4 text-navy-dark tracking-wide">
+                Unieke Ervaringen
+              </h2>
+              <p className="text-xl md:text-2xl text-navy-medium font-croatia-body max-w-3xl mx-auto leading-relaxed">
+                Belevenissen die je nooit zult vergeten
+              </p>
+            </div>
+            
+            <TravelSlider
+              visibleItems={{ mobile: 1, tablet: 2, desktop: 3 }}
+              showNavigation={true}
+              className="mx-auto"
+            >
+              {publishedActivities.map((activity) => (
+                <Card key={activity.id} className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl transition-all duration-500 border-0 rounded-2xl mx-2">
+                  <div className="aspect-[4/3] overflow-hidden">
+                    <img
+                      src={activity.image}
+                      alt={activity.alt}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                    />
+                  </div>
+                  <div className="p-8">
+                    <div className="flex items-start justify-between mb-3">
+                      <h3 className="font-playfair font-bold text-2xl text-navy-dark leading-tight">
+                        {activity.name}
+                      </h3>
+                      <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap ml-2">
+                        {activity.category}
+                      </span>
+                    </div>
+                    <p className="font-croatia-body text-navy-medium mb-4 leading-relaxed text-base">
+                      {activity.description}
+                    </p>
+                    <div className="flex items-center text-sm text-navy-medium mb-6">
+                      <MapPin className="w-4 h-4 mr-2" />
+                      <span>{activity.location}</span>
+                    </div>
+                    <div className="inline-flex items-center justify-center bg-gold-accent hover:bg-gold-light text-navy-dark font-playfair font-bold px-6 py-3 rounded-full transition-all duration-300 hover:scale-105 shadow-luxury hover:shadow-gold text-base cursor-pointer">
+                      Meer Info <ArrowRight className="w-4 h-4 ml-2" />
+                    </div>
+                  </div>
+                </Card>
+              ))}
             </TravelSlider>
           </div>
         </section>
       )}
 
-      {/* Published Pages */}
-      {siteSettings?.showOntdekMeer && publishedPages.length > 0 && (
-        <section className="py-16 px-5 max-w-6xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold font-playfair text-gray-900">
+      {/* Motivation Section */}
+      {motivation?.isActive && (
+        <section className="py-16 px-5 bg-navy-dark text-white">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-4xl md:text-6xl font-playfair font-bold mb-6 text-white">
+              {motivation.title}
+            </h2>
+            <h3 className="text-xl md:text-2xl font-croatia-body mb-8 text-gold-light">
+              {motivation.subtitle}
+            </h3>
+            <p className="text-lg md:text-xl font-croatia-body leading-relaxed mb-12 text-white/90 max-w-3xl mx-auto">
+              {motivation.description}
+            </p>
+            
+            {motivationImageLocation && (
+              <div className="mb-8 text-sm text-white/70 font-croatia-body">
+                📍 Gefotografeerd in {motivationImageLocation.locationName}
+              </div>
+            )}
+
+            <Link href={motivation.buttonLink}>
+              <Button 
+                className="bg-gold-accent hover:bg-gold-light text-navy-dark font-playfair font-bold px-8 py-4 rounded-full text-lg transition-all duration-300 hover:scale-105 shadow-luxury hover:shadow-gold"
+                onClick={() => trackHomepageInteraction('motivation_button', 'motivation_section')}
+              >
+                {motivation.buttonText}
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {/* Pages Section - Only show if there are published pages */}
+      {siteSettings?.showPages && publishedPages.length > 0 && (
+        <section className="py-4 px-5" style={{ backgroundColor: "#f8f6f1" }}>
+          <div className="text-center mb-6">
+            <h2 className="text-4xl md:text-6xl font-playfair font-bold mb-4 text-navy-dark tracking-wide">
               Ontdek Meer
             </h2>
+            <p className="text-xl md:text-2xl text-navy-medium font-croatia-body max-w-3xl mx-auto leading-relaxed">
+              Verdiep je in de rijke geschiedenis en cultuur
+            </p>
+          </div>
+          <div className="text-center mb-8">
             <Link href="/ontdek-meer">
-              <Button
-                variant="outline"
-                className="text-gray-900 border-gray-300 hover:bg-gray-100"
-              >
-                Bekijk Alles
+              <Button className="bg-navy-dark hover:bg-navy-medium text-white font-playfair font-bold px-6 py-3 rounded-full transition-all duration-300 hover:scale-105 shadow-luxury hover:shadow-navy-dark/25">
+                <ArrowRight className="w-4 h-4 mr-2" />
+                Alle Pagina's
               </Button>
             </Link>
           </div>
