@@ -50,14 +50,14 @@ export default function TravelSlider({
   }
 
   return (
-    <div className={cn("relative", className)} data-testid="travel-slider">
-      <div className="overflow-hidden" ref={emblaRef}>
-        <div className="flex">
+    <div className={cn("relative", className)} data-testid="travel-slider" style={{isolation: 'isolate'}}>
+      <div className="embla overflow-hidden" ref={emblaRef}>
+        <div className="embla__container flex">
           {children.map((child, index) => (
             <div
               key={index}
               className={cn(
-                "flex-none",
+                "embla__slide flex-none flex",
                 // Mobile: full width (1 item)
                 "w-full",
                 // Tablet: half width (2 items) 
@@ -65,6 +65,7 @@ export default function TravelSlider({
                 // Desktop: based on visibleItems.desktop
                 visibleItems.desktop === 4 ? "lg:w-1/4" : visibleItems.desktop === 2 ? "lg:w-1/2" : visibleItems.desktop === 3 ? "lg:w-1/3" : "lg:w-full"
               )}
+              style={{transformStyle: 'preserve-3d'}}
             >
               {child}
             </div>

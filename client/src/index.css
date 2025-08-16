@@ -193,3 +193,45 @@ input[type="range"].slider::-moz-range-thumb {
   border: none;
   cursor: pointer;
 }
+
+/* Typography styles for consistent font usage */
+.font-playfair {
+  font-family: 'Playfair Display', serif;
+}
+
+.font-croatia-body {
+  font-family: 'Inter', sans-serif;
+}
+
+/* Enhanced z-index for hover shadows in carousels */
+.group:hover {
+  z-index: 9999 !important;
+  position: relative !important;
+  transform: translateZ(0) !important;
+}
+
+.shadow-luxury-xl {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 10px 30px -5px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Force carousel containers to allow z-index layering */
+[data-testid="travel-slider"] {
+  isolation: isolate;
+}
+
+[data-testid="travel-slider"] > div {
+  transform-style: preserve-3d !important;
+}
+
+/* Embla specific overrides - allow shadows to show */
+.embla {
+  overflow: visible !important;
+}
+
+.embla__container {
+  transform-style: preserve-3d !important;
+}
+
+.embla__slide {
+  transform-style: preserve-3d !important;
+}

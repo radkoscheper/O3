@@ -482,7 +482,7 @@ export default function Home() {
             {publishedDestinations.map((destination: any) => {
               const CardContent = (
                 <Card 
-                  className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl transition-all duration-500 border-0 rounded-2xl mx-2"
+                  className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl hover:z-50 transition-all duration-500 border-0 rounded-2xl mx-2 h-full flex flex-col relative"
                 >
                   <div className="aspect-[4/3] overflow-hidden relative">
 
@@ -536,14 +536,14 @@ export default function Home() {
                       </div>
                     )}
                   </div>
-                  <div className="p-8">
+                  <div className="p-8 flex flex-col flex-grow">
                     <h3 className="font-playfair font-bold text-2xl text-navy-dark mb-3 leading-tight">
                       {destination.name}
                     </h3>
-                    <p className="font-croatia-body text-navy-medium mb-6 leading-relaxed text-base">
+                    <p className="font-croatia-body text-navy-medium mb-6 leading-relaxed text-base flex-grow">
                       {destination.description || destination.subtitle || "Ontdek deze prachtige bestemming"}
                     </p>
-                    <div className="inline-flex items-center justify-center bg-gold-accent hover:bg-gold-light text-navy-dark font-playfair font-bold px-8 py-4 rounded-full transition-all duration-300 hover:scale-105 shadow-luxury hover:shadow-gold text-lg cursor-pointer">
+                    <div className="inline-flex items-center justify-center bg-gold-accent hover:bg-gold-light text-navy-dark font-playfair font-bold px-8 py-4 rounded-full transition-all duration-300 hover:scale-105 shadow-luxury hover:shadow-gold text-lg cursor-pointer mt-auto">
                       Ontdek Meer
                     </div>
                   </div>
@@ -656,7 +656,7 @@ export default function Home() {
                   };
 
                   const CardContent = (
-                    <Card className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl transition-all duration-500 border-0 rounded-2xl mx-2">
+                    <Card className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl hover:z-50 transition-all duration-500 border-0 rounded-2xl mx-2 h-full flex flex-col relative">
                       <div className="aspect-[4/3] overflow-hidden">
                         <ThumbnailImage
                           src={getActivityImage(activity)}
@@ -665,14 +665,14 @@ export default function Home() {
                           fallback="/images/activities/default-activity.jpg"
                         />
                       </div>
-                      <div className="p-8">
+                      <div className="p-8 flex flex-col flex-grow">
                         <h3 className="font-playfair font-bold text-2xl text-navy-dark mb-3 leading-tight">
                           {activity.name}
                         </h3>
-                        <p className="font-croatia-body text-navy-medium mb-4 leading-relaxed text-base">
+                        <p className="font-croatia-body text-navy-medium mb-4 leading-relaxed text-base flex-grow">
                           {activity.description || "Ontdek deze unieke activiteit"}
                         </p>
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between mt-auto">
                           <p className="font-croatia-body text-sm text-gold-accent font-bold flex items-center">
                             <MapPin className="w-4 h-4 mr-1" />
                             {activity.location}
@@ -778,8 +778,8 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {publishedPages.map((page) => (
               <Link href={`/${page.slug}`} key={page.id}>
-                <Card className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 border-none cursor-pointer">
-                  <div className="p-6">
+                <Card className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl hover:z-10 transition-all duration-300 border-none cursor-pointer h-full flex flex-col relative">
+                  <div className="p-6 flex flex-col flex-grow">
                     <div className="flex items-start justify-between mb-3">
                       <h3 className="text-xl font-bold font-playfair text-gray-900">
                         {page.title}
@@ -790,10 +790,10 @@ export default function Home() {
                         </span>
                       )}
                     </div>
-                    <p className="text-gray-600 text-sm mb-4 font-croatia-body">
+                    <p className="text-gray-600 text-sm mb-4 font-croatia-body flex-grow">
                       {page.metaDescription}
                     </p>
-                    <div className="flex items-center text-xs text-gray-500">
+                    <div className="flex items-center text-xs text-gray-500 mt-auto">
                       <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded">
                         {page.template}
                       </span>
@@ -829,7 +829,7 @@ export default function Home() {
             >
               {publishedGuides.map((guide: any) => {
                 const CardContent = (
-                  <Card className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl transition-all duration-500 border-0 rounded-2xl mx-2">
+                  <Card className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl hover:z-50 transition-all duration-500 border-0 rounded-2xl mx-2 h-full flex flex-col relative">
                     <div className="aspect-[5/3] overflow-hidden">
                       <img
                         src={guide.image}
@@ -837,14 +837,14 @@ export default function Home() {
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                       />
                     </div>
-                    <div className="p-8">
+                    <div className="p-8 flex flex-col flex-grow">
                       <h3 className="font-playfair font-bold text-2xl text-navy-dark mb-3 leading-tight">
                         {guide.title}
                       </h3>
-                      <p className="font-croatia-body text-navy-medium mb-6 leading-relaxed text-base">
+                      <p className="font-croatia-body text-navy-medium mb-6 leading-relaxed text-base flex-grow">
                         {guide.description}
                       </p>
-                      <div className="inline-flex items-center justify-center bg-gold-accent hover:bg-gold-light text-navy-dark font-playfair font-bold px-6 py-3 rounded-full transition-all duration-300 hover:scale-105 shadow-luxury hover:shadow-gold text-base cursor-pointer">
+                      <div className="inline-flex items-center justify-center bg-gold-accent hover:bg-gold-light text-navy-dark font-playfair font-bold px-6 py-3 rounded-full transition-all duration-300 hover:scale-105 shadow-luxury hover:shadow-gold text-base cursor-pointer mt-auto">
                         Lees Meer
                       </div>
                     </div>
