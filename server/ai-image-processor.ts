@@ -66,7 +66,7 @@ export async function processImageWithAI(
     // Apply generative fill if enabled and aspect ratio is set
     if (defaultSettings.generativeFill && defaultSettings.aspectRatio) {
       const [width, height] = defaultSettings.aspectRatio.split(':').map(n => parseInt(n));
-      aiImageUrl = generateCloudinaryUrl(aiImageUrl, [`e_gen_fill,ar_${width}:${height},c_pad`]);
+      aiImageUrl = generateCloudinaryUrl(aiImageUrl, [`b_gen_fill,ar_${width}:${height},c_pad`]);
     }
 
     // Generate travel-specific tags for Poland content
