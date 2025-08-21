@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import useEmblaCarousel from 'embla-carousel-react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -36,6 +36,20 @@ export default function TravelSlider({
   const scrollNext = useCallback(() => {
     if (emblaApi) emblaApi.scrollNext()
   }, [emblaApi])
+
+  // Track screen size for responsive navigation
+  const [screenWidth, setScreenWidth] = useState(() => 
+    typeof window !== 'undefined' ? window.innerWidth : 1024
+  )
+
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth)
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // Force re-initialization when visibleItems change
   useEffect(() => {
@@ -80,15 +94,30 @@ export default function TravelSlider({
     return () => observer.disconnect()
   }, [emblaApi, children.length])
 
-  // Show navigation based on CMS settings and item count
+  // Show navigation based on CMS settings and item count per device
   const shouldShowNavigation = () => {
     if (!showNavigation || !children) return false
     
-    // Always show navigation if more items than visible
-    return children.length > visibleItems.desktop
+    // Determine visible items based on current screen width
+    let currentVisibleItems
+    if (screenWidth < 768) {
+      currentVisibleItems = visibleItems.mobile
+    } else if (screenWidth < 1024) {
+      currentVisibleItems = visibleItems.tablet
+    } else {
+      currentVisibleItems = visibleItems.desktop
+    }
+    
+    // Show navigation if more items than visible on current device
+    return children.length > currentVisibleItems
   }
   
   const showNavigationButtons = shouldShowNavigation()
+  
+  // Re-calculate on screenWidth changes
+  useEffect(() => {
+    // Force re-render when screen size changes
+  }, [screenWidth, children.length, visibleItems.mobile, visibleItems.tablet, visibleItems.desktop])
 
   // Calculate flex-basis for carousel items based on visible items
   const getFlexBasis = () => {
