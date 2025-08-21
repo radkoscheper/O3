@@ -12,7 +12,65 @@ import OpenGraphMeta from "@/components/ui/open-graph-meta";
 import Footer from "@/components/ui/footer";
 import type { SiteSettings, SearchConfig } from "@shared/schema";
 
-// Activities section component
+// Icon mapping for activity categories - Each category has unique icon
+function getCategoryIcon(category: string): string {
+  const iconMap: { [key: string]: string } = {
+    'accommodatie': '🏨',
+    'ambacht': '⚒️',
+    'architectuur': '🏗️',
+    'berg': '⛰️',
+    'bergen': '🏔️',
+    'boottocht': '⛵',
+    'complex': '🏢',
+    'cultureel centrum': '🎨',
+    'cultuur': '🎭',
+    'district': '🏘️',
+    'eilanden': '🏝️',
+    'eten': '🍽️',
+    'festival': '🎉',
+    'grotten': '🕳️',
+    'historisch': '📜',
+    'industrie': '🏭',
+    'kabelbaan': '🚠',
+    'kapel': '⛪',
+    'kasteel': '🏰',
+    'kathedraal': '⛪',
+    'kerk': '💒',
+    'klooster': '🏯',
+    'kunst': '🎨',
+    'kuuroord': '♨️',
+    'marktplein': '🏪',
+    'meer': '🏞️',
+    'museum': '🏛️',
+    'natuur': '🌲',
+    'ondergronds': '🚇',
+    'paleis': '👑',
+    'pelgrimage': '🙏',
+    'pier': '🌊',
+    'plein': '🏙️',
+    'restaurant': '🍽️',
+    'rondleiding': '🎯',
+    'ruïnes': '🏚️',
+    'show': '🎪',
+    'skiën': '⛷️',
+    'spa': '🧘',
+    'strand': '🏖️',
+    'tour': '👥',
+    'traditie': '🪘',
+    'unesco': '🌟',
+    'uitzichtpunt': '👁️',
+    'visserij': '🎣',
+    'wandeling': '🚶',
+    'watersport': '🏄',
+    'waterval': '💧',
+    'wijn': '🍷',
+    'workshop': '🔨'
+  };
+  
+  return iconMap[category.toLowerCase()] || '📍';
+}
+
+// Activities section component - Homepage luxury styling
 function ActivitiesSection({ pageTitle, setSelectedActivityId, siteSettings }: { 
   pageTitle?: string, 
   setSelectedActivityId: (id: string | null) => void,
@@ -36,69 +94,84 @@ function ActivitiesSection({ pageTitle, setSelectedActivityId, siteSettings }: {
   }
 
   return (
-    <section className="py-16 px-5 max-w-6xl mx-auto">
-      <h2 className="text-3xl font-bold mb-8 font-playfair text-gray-900">
-        Activiteiten in {pageTitle}
-      </h2>
+    <section className="py-4 px-5 max-w-7xl mx-auto">
+      <div className="text-center mb-6">
+          <h2 className="text-4xl md:text-6xl font-playfair font-bold mb-4 text-navy-dark tracking-wide">
+            Activiteiten in {pageTitle}
+          </h2>
+          <p className="text-xl md:text-2xl text-navy-medium font-croatia-body max-w-3xl mx-auto leading-relaxed">
+            De beste ervaringen die {pageTitle} te bieden heeft
+          </p>
+      </div>
       <TravelSlider
         visibleItems={{ 
           mobile: 1, 
           tablet: 2, 
-          desktop: siteSettings?.maxHighlightsVisible || 4 
+          desktop: Math.max(1, siteSettings?.maxHighlightsVisible || 4)
         }}
         showNavigation={true}
         className="mx-auto"
       >
         {locationActivities.map((activity: any) => {
-          // Handler for activity click to show details in content section
-          const handleActivityClick = (e: React.MouseEvent) => {
-            e.preventDefault();
-            setSelectedActivityId(activity.id.toString());
-            
-            // Update URL with activity parameter
-            const newUrl = `${window.location.pathname}?activity=${activity.id}`;
-            window.history.pushState({}, '', newUrl);
-            
-            // Scroll to content section smoothly
-            const contentSection = document.getElementById('content-section');
-            if (contentSection) {
-              contentSection.scrollIntoView({ behavior: 'smooth' });
-            }
-          };
+            // Handler for activity click to show details in content section
+            const handleActivityClick = (e: React.MouseEvent) => {
+              e.preventDefault();
+              setSelectedActivityId(activity.id.toString());
+              
+              // Update URL with activity parameter
+              const newUrl = `${window.location.pathname}?activity=${activity.id}`;
+              window.history.pushState({}, '', newUrl);
+              
+              // Scroll to content section smoothly
+              const contentSection = document.getElementById('content-section');
+              if (contentSection) {
+                contentSection.scrollIntoView({ behavior: 'smooth' });
+              }
+            };
 
-          return (
-            <Card 
-              key={activity.id}
-              className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 border-none cursor-pointer"
-              onClick={handleActivityClick}
-            >
-              {activity.image && (
-                <img
-                  src={activity.image}
-                  alt={activity.alt || activity.name}
-                  className="w-full h-40 object-cover"
-                  onError={(e) => {
-                    e.currentTarget.src = '/images/activities/placeholder.svg';
-                  }}
-                />
-              )}
-              <div className="p-4">
-                <h3 className="font-bold font-playfair text-gray-900 mb-2">
-                  {activity.name}
-                </h3>
-                {activity.description && (
-                  <p className="text-sm text-gray-600 font-croatia-body line-clamp-2">
-                    {activity.description}
+            const CardContent = (
+              <Card 
+                className="group overflow-hidden bg-white shadow-luxury hover:shadow-luxury-xl hover:z-50 transition-all duration-500 border-0 rounded-2xl h-full flex flex-col relative"
+              >
+                <div className="aspect-[4/3] overflow-hidden relative">
+                  <img
+                    src={activity.image || '/images/activities/placeholder.svg'}
+                    alt={activity.alt || activity.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                    onError={(e) => {
+                      e.currentTarget.src = '/images/activities/placeholder.svg';
+                    }}
+                  />
+                </div>
+                <div className="p-8 flex flex-col flex-grow">
+                  <h3 className="font-playfair font-bold text-2xl text-navy-dark mb-3 leading-tight">
+                    {activity.name}
+                  </h3>
+                  <p className="font-croatia-body text-navy-medium mb-6 leading-relaxed text-base flex-grow">
+                    {activity.description || "Ontdek deze prachtige activiteit"}
                   </p>
-                )}
-                {activity.category && (
-                  <p className="text-xs text-gray-500 mt-2 capitalize">
-                    {activity.category}
-                  </p>
-                )}
+                  {activity.category && (
+                    <p className="text-sm text-green-600 mb-4 capitalize font-croatia-body font-medium flex items-center gap-2">
+                      <span className="text-base">{getCategoryIcon(activity.category)}</span>
+                      {activity.category}
+                    </p>
+                  )}
+                  <div className="inline-flex items-center justify-center bg-gold-accent hover:bg-gold-light text-navy-dark font-playfair font-bold px-8 py-4 rounded-full transition-all duration-300 hover:scale-105 shadow-luxury hover:shadow-gold text-lg cursor-pointer mt-auto">
+                    Bekijk
+                  </div>
+                </div>
+              </Card>
+            );
+
+            return (
+              <div 
+                key={activity.id}
+                onClick={handleActivityClick}
+                className="cursor-pointer"
+              >
+                {CardContent}
               </div>
-            </Card>
-          );
+            );
         })}
       </TravelSlider>
     </section>
@@ -209,10 +282,10 @@ export default function Page() {
 
   // Fetch location-specific featured activities
   const { data: locationFeaturedActivities = [] } = useQuery({
-    queryKey: ["/api/admin/activities", page?.title],
+    queryKey: ["/api/activities/location", page?.title, "featured"],
     queryFn: async () => {
       if (!page?.title) return [];
-      const response = await fetch('/api/admin/activities');
+      const response = await fetch(`/api/activities/location/${encodeURIComponent(page.title)}`);
       if (!response.ok) {
         throw new Error('Failed to fetch activities');
       }
@@ -724,29 +797,33 @@ export default function Page() {
               )}
             </div>
           ) : (
-            // Show original page content
-            <div 
-              className="prose prose-lg max-w-none font-croatia-body"
-              dangerouslySetInnerHTML={{
-                __html: page.content
-                  .replace(/\n/g, '<br>')
-                  .replace(/# (.*)/g, '<h1 class="text-3xl font-bold mb-6 text-gray-900 font-croatia-body">$1</h1>')
-                  .replace(/## (.*)/g, '<h2 class="text-2xl font-semibold mb-4 text-gray-800 font-croatia-body">$1</h2>')
-                  .replace(/### (.*)/g, '<h3 class="text-xl font-medium mb-3 text-gray-700 font-croatia-body">$1</h3>')
-                  .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')
-                  .replace(/\*(.*?)\*/g, '<em class="italic text-gray-700">$1</em>')
-                  .replace(/- (.*)/g, '<li class="mb-2 text-gray-700">$1</li>')
-                  .replace(/(<li.*<\/li>)/g, '<ul class="list-disc list-inside mb-6 space-y-2 ml-4">$1</ul>')
-                  .replace(/---/g, '<hr class="my-8 border-gray-200">')
-              }}
-            />
+            // Show original page content with improved typography
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 font-playfair mb-6">{page?.title}</h1>
+              <div 
+                className="prose prose-lg max-w-none font-croatia-body"
+                dangerouslySetInnerHTML={{
+                  __html: page.content
+                    .replace(/\n/g, '<br>')
+                    .replace(/# (.*)/g, '<h2 class="text-2xl font-semibold mb-4 text-gray-800 font-playfair">$1</h2>')
+                    .replace(/## (.*)/g, '<h3 class="text-xl font-medium mb-3 text-gray-700 font-playfair">$1</h3>')
+                    .replace(/### (.*)/g, '<h4 class="text-lg font-medium mb-2 text-gray-700 font-playfair">$1</h4>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em class="italic text-gray-700">$1</em>')
+                    .replace(/- (.*)/g, '<li class="mb-2 text-gray-700 text-lg leading-relaxed">$1</li>')
+                    .replace(/(<li.*<\/li>)/g, '<ul class="list-disc list-inside mb-6 space-y-2 ml-4">$1</ul>')
+                    .replace(/---/g, '<hr class="my-8 border-gray-200">')
+                }}
+              />
+            </div>
           )}
         </Card>
       </section>
 
       {/* Location-specific Featured Activities Section */}
       {locationFeaturedActivities.length > 0 && (
-        <section className="py-16 px-5 max-w-6xl mx-auto">
+        <section className="py-16 px-5 bg-white">
+          <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold mb-8 font-playfair text-gray-900">
             Hoogtepunten van {page.title}
           </h2>
@@ -810,6 +887,7 @@ export default function Page() {
                   </div>
                 );
               })}
+          </div>
           </div>
         </section>
       )}
